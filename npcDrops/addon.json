@@ -1,0 +1,11 @@
+{
+	"title"		:	"npcDrops NPC Drop System",
+	"type"		:	"npc",
+	"tags"		:	[ "realism","fun" ],
+	"ignore"	:
+	[
+		"*.psd",
+		"*.vcproj",
+		"*.svn*"
+	]
+}
