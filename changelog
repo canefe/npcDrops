@@ -1,0 +1,38 @@
+Current version: 1.4
+
+===================
+npcDrops version: 1.4
+* New Rarity labels for drops.
+* New cooldown label for drops.
+===================
+
+===================
+npcDrops version: 1.3
+* Changed UI colors.
+* Code optimization.
+* Removed debug 'print's.
+===================
+
+===================
+npcDrops version: 1.2
+* 'Settings' menu added.
+* Drop sound avaible now!
+* Player notify system!
+* Database reset avaible in case database problems! (even no restart required!)
+* Item removal avaible after x seconds.
+* Disable npcDrops easily from settings section!
+* Code optimization.
+* And more...
+===================
+
+===================
+npcDrops version: 1.1
+* Fixed checkbox issue.
+* Changed UI colors.
+* Added 'Delete NPCDrops' and 'View Changelog' functions.
+===================
+
+===================
+npcDrops version: 1.0
+* Initial version
+===================
