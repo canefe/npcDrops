@@ -1,37 +1,57 @@
-## Welcome to GitHub Pages
+## What is npcDrops
 
-You can use the [editor on GitHub](https://github.com/canefe/npcDrops/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+npcDrops a simple loot system that drops from NPCs.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
 
-### Markdown
+### Features
+* In-game configuration.
+* Flat and understandable GUI.
+* Easy and Fast configuration.
+* DarkRP shipment support. (NPCs can drop even DarkRP shipments!)
+* All drops have drop rate. (e.g. 0.1 rate => %10)
+* You can adjust rate between `0.1 - 1`
+* Dropped loots can be removed after x seconds.
+* Players gets notified if they dropped a loot. (Only on <0.8 rates)
+* Cooldown and Rarity 3D2D texts on loots.
+* Play sound on drop.
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+### How to Install
 
-```markdown
-Syntax highlighted code block
+#### 1: Adding to steam collection.
+You can add addon to your steam collection. [Click here](https://steamcommunity.com/sharedfiles/filedetails/?id=1161497192) and add to your collection.
 
-# Header 1
-## Header 2
-### Header 3
+**Note: Workshop version may is not as updated as github version.**
 
-- Bulleted
-- List
+#### 2: Adding to addons folder
+Add npcDrops folder into `/garrysmod/addons_ folder` Then restart your server.
 
-1. Numbered
-2. List
+### How to Use
+[Click here](https://github.com/canefe/npcDrops/wiki) to visit the wiki.
 
-**Bold** and _Italic_ and `Code` text
+### Media
 
-[Link](url) and ![Image](src)
-```
+Main GUI
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+![Main GUI](https://github.com/canefe/npcDrops/blob/master/media/gui/main/v1.4.png)
 
-### Jekyll Themes
+Creating new npcDrop
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/canefe/npcDrops/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+![New npcDrop](https://github.com/canefe/npcDrops/blob/master/media/gui/new-v1.4.png?raw=true)
 
-### Support or Contact
+Settings
 
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+![Settings](https://github.com/canefe/npcDrops/blob/master/media/gui/v1.4.png?raw=true)
+
+List of npcDrops (to remove or edit any)
+
+![List](https://github.com/canefe/npcDrops/blob/master/media/gui/delete/v1.4.png?raw=true)
+
+
+### Credits
+Thanks to all person bellow. They helped on this project.
+
+[Ahmet Alyıldız](http://steamcommunity.com/profiles/76561198133771457/): Main Idea.
+
+[Fexa](http://steamcommunity.com/id/fexahit/): Help on Developement.
+
+[Reyvın](http://steamcommunity.com/profiles/76561198096277333/): Suggestions.
