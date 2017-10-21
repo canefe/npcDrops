@@ -2,12 +2,12 @@
 AddCSLuaFile()
 local version = "1.4" 
 
-local npcDrops = npcDrops or {}
-npcDrops.debug = true -- debug thing for just 100% rate to drop.
+local npcDrops = npcDrops or {} -- in-lua data 
+
+npcDrops.debug = false -- debug thing for just 100% rate to drop.
 local changelog
 local con = http.Fetch( "https://raw.githubusercontent.com/canefe/npcDrops/master/changelog",
 	function( body, len, headers, code )
-		-- The first argument is the HTML we asked for.
 		changelog = body
 
 	end,
@@ -25,15 +25,6 @@ util.AddNetworkString("npcDrops_reset")
 end
 
 local rgb = Color
-
-	concommand.Add("testframe2", function(ply,cmd,arg)
-
-		net.Start("test_to2")
-
-
-		net.Send(ply)
-
-	end)
 
 	local function tables_exist()
 		local query,result
@@ -448,6 +439,7 @@ if CLIENT then
 		size = 12,
 		weight = 450,
 	} )
+	surface.CreateFont("npcDrops_itemFont", {font = "Roboto", size = 100, shadow = true,  extended = true})
 
 
 
@@ -473,7 +465,7 @@ if CLIENT then
 
 						cam.Start3D2D( v:GetPos() + Vector(0,0,som) , Angle( 0, LocalPlayer():EyeAngles().yaw - 90, 90 ), 0.02 )
 							surface.SetDrawColor( backgroundColor )
-							surface.SetFont("cool100")
+							surface.SetFont("npcDrops_itemFont")
 							local ew, eh = surface.GetTextSize(v:GetNWString("npcDropname"))
 							local fw = (ew + 500)
 							local xpos = (-ew * 0.5) 
@@ -481,30 +473,30 @@ if CLIENT then
 							surface.DrawRect( xpos - 230, 0 + math.sin( CurTime() ) * 50, fw, 200 )
 							if textV == 1 then
 								surface.DrawRect( -300, -180 + math.sin( CurTime() ) * 50, 600  , 180 )
-								DrawElectricText(1, "BASIC", "cool100", -130, -150 + math.sin( CurTime() ) * 50, rgb(39, 174, 96), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)								
-								draw.SimpleText( v:GetNWString("npcDropname"), "cool100", 0, 90 + math.sin( CurTime() ) * 50, Color( 255, 255, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+								DrawElectricText(1, "BASIC", "npcDrops_itemFont", -130, -150 + math.sin( CurTime() ) * 50, rgb(39, 174, 96), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)								
+								draw.SimpleText( v:GetNWString("npcDropname"), "npcDrops_itemFont", 0, 90 + math.sin( CurTime() ) * 50, Color( 255, 255, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 							end
 							if textV == 2 then
 								surface.DrawRect( -300, -180 + math.sin( CurTime() ) * 50, 600  , 180 )
-								draw.SimpleText( v:GetNWString("npcDropname"), "cool100", 0, 90 + math.sin( CurTime() ) * 50, Color( 255, 255, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-								DrawElectricText(1, "COMMON", "cool100", -200, -150 + math.sin( CurTime() ) * 50, rgb(243, 156, 18), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+								draw.SimpleText( v:GetNWString("npcDropname"), "npcDrops_itemFont", 0, 90 + math.sin( CurTime() ) * 50, Color( 255, 255, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+								DrawElectricText(1, "COMMON", "npcDrops_itemFont", -200, -150 + math.sin( CurTime() ) * 50, rgb(243, 156, 18), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 							end
 							if textV == 3 then
 								surface.DrawRect( -300, -180 + math.sin( CurTime() ) * 50, 600, 180 )
-								draw.SimpleText( v:GetNWString("npcDropname"), "cool100", 0, 90 + math.sin( CurTime() ) * 50, Color( 255, 255, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-								DrawFadingText(1, "UNCOMMON", "cool100", -240, -150 + math.sin( CurTime() ) * 50, rgb(22, 160, 133), rgb(44, 62, 80))
+								draw.SimpleText( v:GetNWString("npcDropname"), "npcDrops_itemFont", 0, 90 + math.sin( CurTime() ) * 50, Color( 255, 255, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+								DrawFadingText(1, "UNCOMMON", "npcDrops_itemFont", -240, -150 + math.sin( CurTime() ) * 50, rgb(22, 160, 133), rgb(44, 62, 80))
 								
 							end
 							if textV == 4 then
 								surface.DrawRect( -300, -180 + math.sin( CurTime() ) * 50, 600, 180 )
-								draw.SimpleText( v:GetNWString("npcDropname"), "cool100", 0, 90 + math.sin( CurTime() ) * 50, Color( 255, 255, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-								DrawEnchantedText(2, "RARE", "cool100", -110, -150 + math.sin( CurTime() ) * 50, Color(255, 0, 0), Color(0, 0, 255))
+								draw.SimpleText( v:GetNWString("npcDropname"), "npcDrops_itemFont", 0, 90 + math.sin( CurTime() ) * 50, Color( 255, 255, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+								DrawEnchantedText(2, "RARE", "npcDrops_itemFont", -110, -150 + math.sin( CurTime() ) * 50, Color(255, 0, 0), Color(0, 0, 255))
 							end
 							if textV == 5 then
 								
 								surface.DrawRect( -300, -180 + math.sin( CurTime() ) * 50, 600  , 180 )
-								draw.SimpleText( v:GetNWString("npcDropname"), "cool100", 0, 90 + math.sin( CurTime() ) * 50, Color( 255, 255, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-								DrawRainbowText(5, "EPIC", "cool100", -100, -150 + math.sin( CurTime() ) * 50)
+								draw.SimpleText( v:GetNWString("npcDropname"), "npcDrops_itemFont", 0, 90 + math.sin( CurTime() ) * 50, Color( 255, 255, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+								DrawRainbowText(5, "EPIC", "npcDrops_itemFont", -100, -150 + math.sin( CurTime() ) * 50)
 							end
 
 						cam.End3D2D()
@@ -512,7 +504,7 @@ if CLIENT then
 						cam.Start3D2D( v:GetPos() + Vector( 0, 0, 15 ), Angle( 0, LocalPlayer():EyeAngles().yaw - 90, 90 ), 0.02 )
 							surface.SetDrawColor( Color( 235, 189, 99, 50 ) )
 							surface.DrawRect( -400, 0 + math.sin( CurTime() ) * 50, 800, 100 )
-							draw.SimpleText( "Removing after: "..math.floor((v:GetNWInt("npcDropdly") - CurTime())), "cool100", 0, 50 + math.sin( CurTime() ) * 50, Color( 255, 255, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+							draw.SimpleText( "Removing after: "..math.floor((v:GetNWInt("npcDropdly") - CurTime())), "npcDrops_itemFont", 0, 50 + math.sin( CurTime() ) * 50, Color( 255, 255, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 						cam.End3D2D()
 					end	
 				end			 	
