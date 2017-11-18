@@ -1,4 +1,14 @@
-Current version: 1.4
+Current version: 1.5
+
+===================
+npcDrops version: 1.5
+* Multiple drops! 
+* Removable name-rarity labels
+* Removable 'times left' label
+* Settings part is now in main gui
+* When you do/left an action, it goes back to main menu.
+NOTE: I'm kinda rushed this so there could be errors. But It's works for now.
+===================
 
 ===================
 npcDrops version: 1.4
