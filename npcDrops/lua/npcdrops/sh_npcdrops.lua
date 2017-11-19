@@ -326,7 +326,12 @@ local rgb = Color
 			if ply:IsAdmin() then else return end
 
 			local table = sql.Query( "SELECT * FROM npcdrops_data")
+			--if not (IsValid(table) || istable(table)) then npcDrops.notify("Error occured with database. Please reset npcDrops.") return end
 			if not (IsValid(table) || istable(table)) then npcDrops.notify("Error occured with database. Please reset npcDrops.") GetConVar("npcdrops_disabled"):SetBool(1) end
+
+
+
+			ply:SendLua("local tab={Color(26, 188, 156),[[<npcDrops>: ]],Color(236, 240, 241),[[Menu is loading...]]}chat.AddText(unpack(tab))")
 
 			net.Start("npcDrops_menu")
 				if IsValid(table) || istable(table) then net.WriteTable(table) end
@@ -334,6 +339,29 @@ local rgb = Color
 
 
 	end)
+
+	hook.Add( "PlayerSay", "npcDrops_chat", function( ply, msg, group )
+		local comchattable = string.Explode( " ", msg )
+		if ( comchattable[1] == "!npcdrops" ) then
+			if ply:IsAdmin() then
+			local table = sql.Query( "SELECT * FROM npcdrops_data")
+			--if not (IsValid(table) || istable(table)) then npcDrops.notify("Error occured with database. Please reset npcDrops.") return end
+			if not (IsValid(table) || istable(table)) then npcDrops.notify("Error occured with database. Please reset npcDrops.") GetConVar("npcdrops_disabled"):SetBool(1) end
+
+
+
+			ply:SendLua("local tab={Color(26, 188, 156),[[<npcDrops>: ]],Color(236, 240, 241),[[Menu is loading...]]}chat.AddText(unpack(tab))")
+
+			net.Start("npcDrops_menu")
+				if IsValid(table) || istable(table) then net.WriteTable(table) end
+			net.Send(ply)
+
+			else
+				ply:ChatPrint( "No Access" )
+			end
+			return false
+		end
+	end )	
 
 	concommand.Add("npcDrops_removedrop", function(ply,cmd,arg)
 
