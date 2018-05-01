@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 -- npcDrops base file - npcDrops by cmetopapa
 AddCSLuaFile()
 local version = "1.6" 
@@ -4355,7 +4354,3 @@ surface.SetDrawColor( rgb(52, 73, 94, 50) )
 
 
 end
-
-
-
->>>>>>> 00e8a99c0cc123847d81028b188d9121aee16eb3
