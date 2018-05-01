@@ -7,5 +7,5 @@ if SERVER then
 	CreateConVar( "npcdrops_lootsound", "true", FCVAR_ARCHIVE, "Loot sound?" )
 	CreateConVar( "npcdrops_labels", "true", FCVAR_ARCHIVE, "Labels/Bars for items?" )
 	CreateConVar( "npcdrops_itemremovelabel", "true", FCVAR_ARCHIVE, "Label for remove delay?" )
-
+	CreateConVar( "npcdrops_debug", "false", FCVAR_ARCHIVE, "Enable debug mode?" )
 end

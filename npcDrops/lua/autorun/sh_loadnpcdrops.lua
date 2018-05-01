@@ -20,7 +20,7 @@ local zdiag = {
 }
 local loadingtext = {
     [[Loading npcDrops...]],
-    [[npcDrops version: 1.4 ]],
+    [[npcDrops version: 1.6 ]],
 }
 local ydiag = {
     [[====================================================================]],

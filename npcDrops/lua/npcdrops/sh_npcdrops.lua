@@ -1,6 +1,6 @@
 -- npcDrops base file - npcDrops by cmetopapa
 AddCSLuaFile()
-local version = "1.5" 
+local version = "1.6" 
 
 npcDrops = npcDrops or {} -- in-lua data 
 
@@ -78,7 +78,7 @@ local rgb = Color
 
 			if v:IsAdmin() then
 
-
+				if CLIENT then v:EmitSound("HL1/fvox/beep.wav") chat.AddText(Color(26, 188, 156),[[<npcDrops>: ]],Color(236, 240, 241),msg) return end
 				v:SendLua("LocalPlayer():EmitSound('HL1/fvox/beep.wav')")
 				v:SendLua("local tab={Color(26, 188, 156),[[<npcDrops>: ]],Color(236, 240, 241),[["..msg.."]]}chat.AddText(unpack(tab))")
 
@@ -158,16 +158,34 @@ local rgb = Color
 			end
 	end
 
-	local function saveNPCDrops( npc,enti,ratev,shipe,key ) -- saving npcDrops
+
+	local function saveNPCDrops( npc,enti,ratev,shipe,key,code,... ) -- saving npcDrops
 
 
 		local evo = tostring(shipe)
 		local tab = sql.Query( "SELECT * FROM npcdrops_data WHERE npc_id = '"..npc.."'")
 		for k,v in pairs(tab) do if v.npc_id == npc then tab = util.JSONToTable(v.data) end end
 
-		--tab[k]
-		tab[key] = {ent=enti,rate=ratev,shipment=shipe}
+		
+		tab[key] = {ent=enti,rate=ratev,shipment=shipe,code=code}
+		local arger = {}
+		if ... then
+		for k,v in pairs({...}) do
+			print(k.."---".."undabe")
+			--print(v.."+++")
+			PrintTable(v)
+			for c,a in pairs(v) do
+				arger[c] = a
+			end
+			
+		end
+		print("argeris")
+		PrintTable(arger)
+		table.Merge(tab[key],arger)
 
+		end
+		print("tabkey")
+		PrintTable(tab[key])
 		local query = "UPDATE npcdrops_data SET data = '"..util.TableToJSON(tab).."' WHERE npc_id = '"..npc.."'"
 		sql.Query(query)
 
@@ -281,9 +299,12 @@ local rgb = Color
 		local rated  = net.ReadFloat()
 		local shipx  = net.ReadString()
 		local key    = net.ReadString()
+		local code   = net.ReadString()
+		local label  = {label = net.ReadString()}
+		local labelrem = {labelrem = net.ReadString()}
 
+		saveNPCDrops(npcide,entide,rated,tobool(shipx),key,code,label,labelrem)
 
-		saveNPCDrops(npcide,entide,rated,tobool(shipx),key)
 
 	end)
 
@@ -326,14 +347,42 @@ local rgb = Color
 			if ply:IsAdmin() then else return end
 
 			local table = sql.Query( "SELECT * FROM npcdrops_data")
+			--if not (IsValid(table) || istable(table)) then npcDrops.notify("Error occured with database. Please reset npcDrops.") return end
 			if not (IsValid(table) || istable(table)) then npcDrops.notify("Error occured with database. Please reset npcDrops.") GetConVar("npcdrops_disabled"):SetBool(1) end
+
+
+			if SERVER then
+			ply:SendLua("local tab={Color(26, 188, 156),[[<npcDrops>: ]],Color(236, 240, 241),[[Menu is loading...]]}chat.AddText(unpack(tab))")
+
+			net.Start("npcDrops_menu")
+				if IsValid(table) || istable(table) then net.WriteTable(table) end
+			net.Send(ply)
+		end
+
+	end)
+
+	hook.Add( "PlayerSay", "npcDrops_chat", function( ply, msg, group )
+		local comchattable = string.Explode( " ", msg )
+		if ( comchattable[1] == "!npcdrops" ) then
+			if ply:IsAdmin() then
+			local table = sql.Query( "SELECT * FROM npcdrops_data")
+			--if not (IsValid(table) || istable(table)) then npcDrops.notify("Error occured with database. Please reset npcDrops.") return end
+			if not (IsValid(table) || istable(table)) then npcDrops.notify("Error occured with database. Please reset npcDrops.") GetConVar("npcdrops_disabled"):SetBool(1) end
+
+
+
+			ply:SendLua("local tab={Color(26, 188, 156),[[<npcDrops>: ]],Color(236, 240, 241),[[Menu is loading...]]}chat.AddText(unpack(tab))")
 
 			net.Start("npcDrops_menu")
 				if IsValid(table) || istable(table) then net.WriteTable(table) end
 			net.Send(ply)
 
-
-	end)
+			else
+				ply:ChatPrint( "No Access" )
+			end
+			return false
+		end
+	end )	
 
 	concommand.Add("npcDrops_removedrop", function(ply,cmd,arg)
 
@@ -419,17 +468,17 @@ end
 		if GetConVar("npcdrops_disabled"):GetBool() then return end
 		local shouldNotify = GetConVar("npcdrops_notify"):GetBool()
 		local chance
-		
-
+		PrintTable(dropsTable)
 		local med	
 		for k,v in pairs(dropsTable) do if v.npc_id == npc:GetClass() then med = util.JSONToTable(v.data) else return end end
 
 		local passes = {}
 		for k,v in pairs(med) do
 			local rate = math.Rand( 0, 1 )
+			if GetConVar("npcdrops_debug"):GetBool() then v.rate = 1 end
 			local hector
 			--if #med == 1 then hector = med else hector = med[k] end
-			if rate <= tonumber(v.rate) or v.rate == 1 then print("got you") passes[v.ent] = {ent=v.ent,rate=v.rate,shipment=v.shipment} end
+			if rate <= tonumber(v.rate) or v.rate == 1 then print("got you") passes[v.ent] = v end
 
 			
 		end
@@ -451,14 +500,34 @@ end
 					local check
 
 
-						
 
 
+						PrintTable(passes)
 						local item = ents.Create(v.ent)
+
+						if v.labelrem and tobool(v.labelrem) == false then
+							print(v.labelrem,"got pasd")
 						item:SetNWBool("isnpcDrop",true)
+						end
 						item:SetNWInt("npcDropdly", CurTime() + GetConVar("npcdrops_itemremovedly"):GetInt())
-						item:SetNWString("npcDropname", npcDrops.getvName(v.ent))
+						local name
+						if v.label and tobool(v.label) != false then name = v.label else name = npcDrops.getvName(v.ent) end
+						item:SetNWString("npcDropname", name)
 						item:SetNWInt("npcDroprate", tonumber(v.rate))
+						local luaToRun = v.code
+						print("vcode is=",v.code,v.labelrem)
+						npcDrops.EntVal = item
+						npcDrops.Killer = killer
+						npcDrops.NPC 	= npc
+						local playerLua = "local ENT = npcDrops.EntVal local PLY = npcDrops.Killer local NPC = npcDrops.NPC "
+
+						if IsValid(item) and tobool(luaToRun) != false then
+						print("hey")
+						RunString(playerLua..luaToRun, "npcDrops-Lua")
+						npcDrops.EntVal = nil
+						npcDrops.Killer = nil
+						npcDrops.NPC    = nil
+						end
 						--[[
 						print("test=",table.Count(passes) == 1,table.Count(passes))
 						if not (table.Count(passes) == 1) then
@@ -537,6 +606,7 @@ if CLIENT then
 		weight = 450,
 	} )
 	surface.CreateFont("npcDrops_itemFont", {font = "Roboto", size = 100, shadow = true,  extended = true})
+	surface.CreateFont("npcDrops_DermaFont", {font = "Roboto", size = 24, shadow = true,  extended = true})
 
 
 
@@ -693,7 +763,10 @@ if CLIENT then
 	end
 
 
-	local function npcDropsSettings()
+
+
+
+	local function npcDropsSettings(tbl)
 
 		local frame = vgui.Create( "flatblur" )
 		frame:SetSize( 400, 400 )
@@ -728,26 +801,41 @@ if CLIENT then
 				draw.RoundedBox(0,0,0,w,h,rgb(231, 76, 60))
 			end
 
-			local GeneralSettings = vgui.Create( "DPanelList", frame )	
-				GeneralSettings:EnableHorizontal( false )			
-				GeneralSettings:EnableVerticalScrollbar( true )		
-				DCollapsible:SetContents( GeneralSettings )
-				local Don = vgui.Create( "DCheckBoxLabel", GeneralSettings )
-					Don:SetPos( 10, 0 )
+			local advancedCategory = vgui.Create( "DCollapsibleCategory", DScrollPanel )
+			advancedCategory:Dock(TOP)					
+			advancedCategory:SetSize( 400, 100 )					
+			advancedCategory:SetExpanded( 0 )											
+			advancedCategory:SetLabel( "Advanced Settings" )						
+			advancedCategory.Paint = function(s,w,h)
+				draw.RoundedBox(0,0,0,w,h,rgb(231, 76, 60))
+			end
+
+			local advancedSettings = vgui.Create( "DPanelList", frame )	
+				advancedSettings:EnableHorizontal( false )			
+				advancedSettings:EnableVerticalScrollbar( true )		
+				advancedCategory:SetContents( advancedSettings )
+	
+	
+
+				local generalBar = vgui.Create("flatblurScroll", frame)
+				generalBar:SetSBColor( rgb(192, 57, 43))
+				DCollapsible:SetContents( generalBar )
+				local Don = vgui.Create( "DCheckBoxLabel", generalBar )
+					Don:Dock( TOP )
 					Don:SetText( "Disable npcDrops?" )
 					Don:SetConVar( "npcdrops_disabled" )
 					Don:SetValue( GetConVarNumber( "npcdrops_disabled" ) )
 
 
-				local arrl = vgui.Create( "DCheckBoxLabel", GeneralSettings )
-					arrl:SetPos( 10, 30 )
+				local arrl = vgui.Create( "DCheckBoxLabel", generalBar )
+					arrl:Dock( TOP )
 					arrl:SetText( "Remove Item after a while?" )
 					arrl:SetConVar( "npcdrops_itemremove" )
 					arrl:SetValue( GetConVarNumber( "npcdrops_itemremove" ) )
 		
 					
-				local arr = vgui.Create( "DNumSlider", GeneralSettings )
-					arr:SetPos( 10, 40 )
+				local arr = vgui.Create( "DNumSlider", generalBar )
+					arr:Dock( TOP )
 					arr:SetValue( GetConVarNumber( "npcdrops_itemremovedly" ) )
 					arr:SetConVar( "npcdrops_itemremovedly" )
 					arr:SetSize( 400, 90 )
@@ -756,42 +844,49 @@ if CLIENT then
 					arr:SetEnabled(not GetConVarNumber( "npcdrops_itemremove" ))
 					arr:SetMinMax( 1 , 600 )
 
-				local lab = vgui.Create( "DCheckBoxLabel", GeneralSettings )
-					lab:SetPos( 10, 100 )
+				local lab = vgui.Create( "DCheckBoxLabel", generalBar )
+					lab:Dock( TOP )
 					lab:SetText( "Enable 'removing after' label?" )
 					lab:SetValue( GetConVarNumber( "npcdrops_itemremovelabel" ) )
 					lab:SetConVar("npcdrops_itemremovelabel")
 
 					
 
-				local notex = vgui.Create( "DCheckBoxLabel", GeneralSettings )
-					notex:SetPos( 10, 120 )
+				local notex = vgui.Create( "DCheckBoxLabel", generalBar )
+					notex:Dock( TOP )
 					notex:SetText( "Notify player if have dropped something? \n(NOTE: If chance to drop is 100% it doesn't notify)" )
 					notex:SetConVar( "npcdrops_notify" )
 					notex:SetValue( GetConVarNumber( "npcdrops_notify" ) )
 
 
-				local shouldsound = vgui.Create( "DCheckBoxLabel", GeneralSettings )
-					shouldsound:SetPos( 10, 180 )
+				local shouldsound = vgui.Create( "DCheckBoxLabel", generalBar )
+					shouldsound:Dock( TOP )
 					shouldsound:SetText( "Play sound when drops?" )
 					shouldsound:SetConVar( "npcdrops_lootsound" )
 					shouldsound:SetValue( GetConVarNumber( "npcdrops_lootsound" ) )
 
-				local badges = vgui.Create( "DCheckBoxLabel", GeneralSettings )
-					badges:SetPos( 10, 210 )
+				local badges = vgui.Create( "DCheckBoxLabel", generalBar )
+					badges:Dock( TOP )
 					badges:SetText( "Enable drop labels-rarity bar?" )
 					badges:SetConVar( "npcdrops_labels" )
 					badges:SetValue( GetConVarNumber( "npcdrops_labels" ) )
+
+				local debug = vgui.Create( "DCheckBoxLabel", generalBar )
+					debug:Dock( TOP )
+					debug:SetText( "npcDrops will discard rate chance." )
+					debug:SetConVar( "npcdrops_debug" )
+					debug:SetValue( GetConVarNumber( "npcdrops_debug" ) )
 
 local function factCallback()
 					net.Start("npcDrops_reset")
 					net.SendToServer()
 end
-				local factReset = vgui.Create("DButton", GeneralSettings)
+				local factReset = vgui.Create("DButton", generalBar)
+					factReset:Dock( TOP )
 					factReset:SetText( "Reset npcDrops" )
 					factReset:SetTall(20)
 					factReset:SetWide(100)
-					factReset:SetPos( 10, 230 )
+
 					factReset:SetTooltip( "Re-create npcDrops database. Will delete everything!" )
 					factReset:SetFont("Trebuchet18")
 					factReset:SetTextColor(Color(255,255,255))
@@ -816,7 +911,7 @@ end
 
 				local notd = vgui.Create( "DLabel",  frame  )
 				notd:Dock(BOTTOM)
-				notd:SetText( "Copyright © npcDrops cometopapa 2017 ~ All rights Reserved." )
+				notd:SetText( "npcDrops by cometopapa 2017" )
 				notd:SizeToContents() -- "General Settings"
 
 			local LootboxSettings = vgui.Create( "DPanelList", frame )
@@ -835,40 +930,21 @@ end
 
 
 
-	local function npcDropsEdit(npc_id,ent,rate,ship,key)
+	local function npcDropsEdit(npc_id,ent,rate,ship,key,code,label,labelrem)
 
 		local frame = vgui.Create( "DFrame" )
-		frame:SetSize( 200, 200 )
+		frame:SetSize(500, 400)
 		frame:Center()
 		frame:SetTitle("Editing: "..npc_id.."["..key.."]")
 
 		frame:MakePopup()
 		frame:ShowCloseButton( false )
-		frame.Paint = function(s, w, h)
-				surface.SetMaterial( matBlurScreen )
-				surface.SetDrawColor( 255, 255, 255, 255 )				
-				local wx, wy = frame:GetPos()
-				local us = wx / ScrW()
-				local vs = wy / ScrH()
-				local ue = ( wx + w ) / ScrW()
-				local ve = ( wy + h ) / ScrH()
-		
-				local ew = 16
-				
-				for i = 1, ew do
-					
-					matBlurScreen:SetFloat( "$blur", 1 * 5 * ( i / ew ) )
-					matBlurScreen:Recompute()
-					render.UpdateScreenEffectTexture()
-					surface.DrawTexturedRectUV( 0, 0, w, h, us, vs, ue, ve )
-					
-				end
-surface.SetDrawColor( rgb(52, 73, 94, 50) )
-			surface.DrawRect( 0, 0, w, h )
-			surface.SetDrawColor( Color( 40, 40, 40, 100 ) )
-			surface.DrawOutlinedRect( 0, 0, w, h )
-			surface.SetDrawColor( rgb(44, 62, 80) )
-			surface.DrawRect( 0, 0, w - 22, 22 )		
+		function frame:Paint(w, h)
+			draw.RoundedBox(0, 0, 0, 500, 22, rgb(44, 62, 80))
+			draw.RoundedBox(0, 0, 22, 500, 576, Color(46, 46, 46, 255))
+			--draw.RoundedBox(number cornerRadius,number x,number y,number width,number height,table color)
+			draw.RoundedBox(0, 10, 67, 8, 270, Color(128, 128, 128, 255))
+
 		end
 
 		local btn_close = vgui.Create( "DButton", frame ) 
@@ -893,10 +969,63 @@ surface.SetDrawColor( rgb(52, 73, 94, 50) )
 			end
 		end		
 
+			local sheet = vgui.Create("DPropertySheet", frame)
+			function sheet.Paint()
+			end
+			function sheet:Think()
+				for k, v in pairs(sheet.Items) do
+					if !v.Tab then continue end
+					v.Tab:SetTextColor(Color(255, 255, 255, 255))
+					if sheet:GetActiveTab() == v.Tab then
+						function v.Tab:Paint(w, h)
+							draw.RoundedBox(0, 0, 0, w-4.6, h, Color(128, 128, 128, 255))
+						end
+					else
+						function v.Tab:Paint(w, h)
+							draw.RoundedBox(0, 0, 0, w-4.6, h, Color(46, 46, 46, 255))
+
+						end
+					end
+				end
+			end
+
+			sheet:DockMargin(5, 10, 0, 30)
+			sheet:Dock(FILL)
+
+
+
+
+		local panel1 = vgui.Create( "DPanel", sheet )
+		--panel1.Paint = function( self, w, h ) draw.RoundedBox( 4, 0, 0, w, h, Color( 0, 128, 255, self:GetAlpha() ) ) end
+		function panel1:Paint(w, h)
+			draw.RoundedBox(0, 0, 0, w, h, Color(128, 128, 128, 255))
+		end 
+		local DScrollPanel = vgui.Create( "DScrollPanel", panel1 )
+		DScrollPanel:SetSize( 565, 540 )
+		DScrollPanel:SetPos( 5, 500 )
+		DScrollPanel:Dock( FILL )
+		DScrollPanel:Center()
+
+		local sbar = DScrollPanel:GetVBar()
+		function sbar:Paint( w, h )
+			draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 100 ) )
+		end
+		function sbar.btnUp:Paint( w, h )
+			draw.RoundedBox( 0, 0, 0, w, h, rgb(231, 76, 60) )
+		end
+		function sbar.btnDown:Paint( w, h )
+			draw.RoundedBox( 0, 0, 0, w, h, rgb(231, 76, 60) )
+		end
+		function sbar.btnGrip:Paint( w, h )
+			draw.RoundedBox( 0, 0, 0, w, h, rgb(189, 195, 199) )
+		end
+
 		local npcidraw = npc_id
+		local codeisok = code
+		local labelisok = label or false
 
 		local entityidraw
-		local TextEntry = vgui.Create( "DTextEntry", frame ) 
+		local TextEntry = vgui.Create( "DTextEntry", DScrollPanel ) 
 			TextEntry:SetPos( 20, 50 )
 			TextEntry:SetSize( 170, 20 )
 			TextEntry:SetText( ent )
@@ -915,7 +1044,7 @@ surface.SetDrawColor( rgb(52, 73, 94, 50) )
 			end
 
 		local boolis = ship 
-		local boolCheckbox = vgui.Create( "DCheckBox", frame ) 
+		local boolCheckbox = vgui.Create( "DCheckBox", panel1 ) 
 			boolCheckbox:SetPos( 20, 100 )
 			boolCheckbox:SetValue(ship)
 			boolCheckbox:SetTooltip("Is Shipment? (only DarkRP 2.5+)")
@@ -926,9 +1055,34 @@ surface.SetDrawColor( rgb(52, 73, 94, 50) )
 					boolis = false
 				end
 			end
+		
+		local shipmentEnabledLabel = vgui.Create("DLabel", panel1)
+		shipmentEnabledLabel:SetPos(50, 100)
+		shipmentEnabledLabel:SetTextColor(Color(255, 255, 255, 255))
+		shipmentEnabledLabel:SetText("Is shipment? (only DarkRP) (and it has to be a shipment just like f4)")
+		shipmentEnabledLabel:SizeToContents()
+
+		local luaremEnabledLabel = vgui.Create("DLabel", panel1)
+		luaremEnabledLabel:SetPos(50, 120)
+		luaremEnabledLabel:SetTextColor(Color(255, 255, 255, 255))
+		luaremEnabledLabel:SetText("Remove label for this item? (You can remove for all drops though)")
+		luaremEnabledLabel:SizeToContents()
+
+		local remlabel = labelrem
+		local boolLabel = vgui.Create( "DCheckBox", panel1 ) 
+			boolLabel:SetPos( 20, 120 )
+			boolLabel:SetValue(ship)
+			boolLabel:SetTooltip("Remove label for this item")
+			function boolLabel:OnChange( bVal )
+				if ( bVal ) then
+					remlabel = true
+				else
+					remlabel = false
+				end
+			end
 
 			local NumberWangValue = rate
-			local DermaNumSlider = vgui.Create( "DNumSlider", frame )
+			local DermaNumSlider = vgui.Create( "DNumSlider", panel1 )
 			DermaNumSlider:SetPos( 20, 70 )		
 			DermaNumSlider:SetWide(150)
 			DermaNumSlider:SetText( "Chance Rate" )
@@ -944,28 +1098,211 @@ surface.SetDrawColor( rgb(52, 73, 94, 50) )
 
 			end	
 
+		sheet:AddSheet( "General", panel1, "icon16/wrench.png" )
 
-
-
-
-
-		local richtext = vgui.Create( "RichText", frame )
-		richtext:SetPos( 0, 150)
-		richtext:SetSize( 200, 200)
-		richtext:SetText("VAYYYYY")
-
-		function richtext:PerformLayout()
-
-			self:SetFontInternal( "Trebuchet18" )
-
-
+		local panel2 = vgui.Create( "DPanel", sheet )
+		function panel2:Paint(w, h)
+			draw.RoundedBox(0, 0, 0, w, h, Color(128, 128, 128, 255))
+		end 
+		local luaEntry = vgui.Create("DTextEntry", panel2)
+		luaEntry:DockMargin(5,70,10,15)
+		luaEntry:Dock(FILL)
+		luaEntry:SetMultiline(true)
+		luaEntry:SetAlpha(255)
+		luaEntry:SetText(code or "ENT:Remove() -- lol its a joke :D")
+		luaEntry:SetTextColor(color_white)
+		luaEntry.Paint = function(panel,w,h)
+		draw.RoundedBox(0,0,0,w,h,Color(46, 46, 46, 255))
+		panel:DrawTextEntryText( rgb(32, 194, 14), rgb(255, 242, 0), rgb(255, 242, 0) )
 		end
-		richtext:InsertColorChange( 44, 62, 80, 255 )
-		richtext:SetVerticalScrollbarEnabled( false )
 
+
+		local luaLabel = vgui.Create("DLabel", panel2)
+		luaLabel:SetPos(5, 30)
+		luaLabel:SetTextColor(Color(255, 255, 255, 255))
+		luaLabel:SetText("ENT varible for dropped entity \n PLY variable for killed npc \n NPC variable for npc") --76561198176907257
+		luaLabel:SizeToContents()
+		
+			local luaEnabledLabel = vgui.Create("DLabel", panel2)
+			luaEnabledLabel:SetPos(5, 10)
+			luaEnabledLabel:SetTextColor(Color(255, 255, 255, 255))
+			luaEnabledLabel:SetText("Execute lua? ( you better not if you don't know lua )")
+			luaEnabledLabel:SizeToContents()
+
+
+
+		local schemaList = vgui.Create( "flatblurScroll", panel2 )
+		schemaList:Dock( RIGHT )
+		schemaList:Center()
+		schemaList:SetWide(120)
+		schemaList.Paint = function(s,w,h)
+			draw.RoundedBox(0,0,0,w,h,Color(46, 46, 46, 255))
+		end
+		local schemaProp = vgui.Create( "DButton", schemaList )
+		schemaProp:SetText( "Spawn Prop in Front" )
+		--schemaProp:SetTall(20)
+		schemaProp:SetWide(160)
+		schemaProp:Dock(TOP)
+		schemaProp:SetFont("Trebuchet18")
+		schemaProp:SetTextColor(Color(255,255,255))
+		schemaProp.Paint = function(s, w, h)
+			if s:IsHovered() then 
+				draw.RoundedBox(0,0,0,w,h,rgb(231, 76, 60))
+			else
+				draw.RoundedBox(0,0,0,w,h,rgb(192, 57, 43))
+			end
+		end
+		schemaProp.DoClick = function()
+			luaEntry:SetText([[
+-- creating prop
+local a = ents.Create("prop_physics")
+-- you can change its model copy from q
+a:SetModel("models/props_borealis/bluebarrel001.mdl")
+-- spawning prop in front of player
+a:SetPos( PLY:EyePos() + PLY:GetAimVector() * 30 )
+-- setting collision not sure it is ok
+a:SetCollisionGroup(COLLISION_GROUP_INTERACTIVE_DEBRIS)
+-- spawning
+a:Spawn()
+
+				]])
+		end
+
+
+		local schemaNut = vgui.Create( "DButton", schemaList )
+		schemaNut:SetText( "Spawn nutscript item" )
+		schemaNut:SetWide(160)
+		schemaNut:Dock(TOP)
+		schemaNut:SetFont("Trebuchet18")
+		schemaNut:SetTextColor(Color(255,255,255))
+		schemaNut.Paint = function(s, w, h)
+			if s:IsHovered() then 
+				draw.RoundedBox(0,0,0,w,h,rgb(231, 76, 60))
+			else
+				draw.RoundedBox(0,0,0,w,h,rgb(192, 57, 43))
+			end
+		end
+		schemaNut.DoClick = function()
+			luaEntry:SetText([[
+ -- change burger whatever you want
+nut.item.spawn("burger", NPC:GetPos() + Vector(10, 0, 16))
+ -- remove old one
+ENT:Remove() 
+	]])
+		end
+
+
+		local schemaRemove = vgui.Create( "DButton", schemaList )
+		schemaRemove:SetText( "Remove timer" )
+		schemaRemove:SetWide(160)
+		schemaRemove:Dock(TOP)
+		schemaRemove:SetFont("Trebuchet18")
+		schemaRemove:SetTextColor(Color(255,255,255))
+		schemaRemove.Paint = function(s, w, h)
+			if s:IsHovered() then 
+				draw.RoundedBox(0,0,0,w,h,rgb(231, 76, 60))
+			else
+				draw.RoundedBox(0,0,0,w,h,rgb(192, 57, 43))
+			end
+		end
+		schemaRemove.DoClick = function()
+			luaEntry:SetText([[
+ -- make a timer that remove drop in 10 sec
+ -- you can change it
+timer.Simple(10, function()
+ -- remove old one
+ENT:Remove() 
+end)
+	]])
+		end
+			
+
+
+
+		if tobool(code) == false then
+		luaLabel:SetDisabled(true)
+		luaLabel:SetAlpha(0)
+		luaEntry:SetEditable(false)
+		luaEntry:SetAlpha(0)
+		end	
+		local luaEnabledCheckBox = vgui.Create("DCheckBox", panel2)
+		luaEnabledCheckBox:SetSize(20, 20)
+		luaEnabledCheckBox:SetPos(270, 10)
+		luaEnabledCheckBox:SetValue(tobool(code) or false)
+		function luaEnabledCheckBox:OnChange(enabled)
+			if enabled then
+				codeisok = true
+				luaLabel:SetDisabled(false)
+				luaLabel:SetAlpha(255)
+				luaEntry:SetEditable(true)
+				luaEntry:SetAlpha(255)
+			else 
+				codeisok = false
+				luaLabel:SetDisabled(true)
+				luaLabel:SetAlpha(0)
+				luaEntry:SetEditable(false)
+				luaEntry:SetAlpha(0)
+			end
+		end
+
+		local panel3 = vgui.Create( "DPanel", sheet )
+		--panel1.Paint = function( self, w, h ) draw.RoundedBox( 4, 0, 0, w, h, Color( 0, 128, 255, self:GetAlpha() ) ) end
+		function panel3:Paint(w, h)
+			draw.RoundedBox(0, 0, 0, w, h, Color(128, 128, 128, 255))
+		end 
+
+
+
+		local customEnabledLabel = vgui.Create("DLabel", panel3)
+		customEnabledLabel:SetPos(5, 10)
+		customEnabledLabel:SetTextColor(Color(255, 255, 255, 255))
+		customEnabledLabel:SetText("Custom label?")
+		customEnabledLabel:SizeToContents()
+
+		local customLabel = vgui.Create("DLabel", panel3)
+		customLabel:SetPos(5, 40)
+		customLabel:SetTextColor(Color(255, 255, 255, 255))
+		customLabel:SetText("You wanna custom label for your drop? Just enter it.") --76561198176907257
+		customLabel:SizeToContents()
+		local customEntry = vgui.Create( "DTextEntry", panel3)
+		customEntry:SetText(label or "Beef")
+		customEntry:Dock( BOTTOM )
+		customEntry:DockMargin(0,0,0,100)
+
+		if tobool(label) == false then
+			customLabel:SetDisabled(true)
+			customLabel:SetAlpha(0)
+			customEntry:SetEditable(false)
+			customEntry:SetAlpha(0)
+		end
+
+
+		local customEnabledCheckBox = vgui.Create("DCheckBox", panel3)
+		customEnabledCheckBox:SetSize(20, 20)
+		customEnabledCheckBox:SetPos(250, 10)
+		customEnabledCheckBox:SetValue(tobool(label) or false)
+		function customEnabledCheckBox:OnChange(enabled)
+			if enabled then
+				labelisok = true
+				customLabel:SetDisabled(false)
+				customLabel:SetAlpha(255)
+				customEntry:SetEditable(true)
+				customEntry:SetAlpha(255)
+			else 
+				labelisok = false
+				customLabel:SetDisabled(true)
+				customLabel:SetAlpha(0)
+				customEntry:SetEditable(false)
+				customEntry:SetAlpha(0)
+			end
+		end
+
+		sheet:AddSheet( "Execute LUA", panel2, "icon16/application_edit.png" )
+		sheet:AddSheet( "Custom Label", panel3, "icon16/world_edit.png" )
 		local btn_submit = vgui.Create( "DButton", frame )
 		btn_submit:SetText( "Save" )
 		btn_submit:SetTall(20)
+		btn_submit:Dock( BOTTOM )
 		btn_submit:SetWide(100)
 		btn_submit:SetPos( 20, 120 )
 		btn_submit:SetTooltip( "Click here to save this npcdrop" )
@@ -973,15 +1310,21 @@ surface.SetDrawColor( rgb(52, 73, 94, 50) )
 		btn_submit:SetTextColor(Color(255,255,255))
 		btn_submit.DoClick = function()
 			local anyerror = 0
-			if entityidraw then richtext:AppendText("EntityID is OK.") else  richtext:AppendText("EntityID is invalid!") anyerror = anyerror + 1 end 
+			if entityidraw then else  anyerror = anyerror + 1 end 
 			if not (anyerror == 0) then return end
-			print("[npcDrops] Editing: ", npcidraw, " with values: ", entityidraw, NumberWangValue, boolis)
+			print("[npcDrops] Editing: ", npcidraw, " with values: ", entityidraw, NumberWangValue, boolis, codeisok, labelisok)
+			codeisok = codeisok and luaEntry:GetValue() or false
+			labelisok = labelisok and customEntry:GetValue() or false
+			print(labelisok,"labelisok")
 			net.Start("npcDrops_edit")
 				net.WriteString(npcidraw)
 				net.WriteString(entityidraw)
 				net.WriteFloat(tonumber(NumberWangValue))
 				net.WriteString(tostring(boolis))
 				net.WriteString(tostring(key))
+				net.WriteString(tostring(codeisok))
+				net.WriteString(tostring(labelisok))
+				net.WriteString(tostring(remlabel))
 
 			net.SendToServer()
 			frame:Close()
@@ -1007,6 +1350,8 @@ surface.SetDrawColor( rgb(52, 73, 94, 50) )
 
 
 	end
+
+
 
 	local function npcDropsNew(npc)
 
@@ -1318,7 +1663,7 @@ surface.SetDrawColor( rgb(52, 73, 94, 50) )
 
 
 	end
-	local function Dmenux(id,npc_id,ent,chance,ship)
+	local function Dmenux(id,npc_id,ent,chance,ship,code,label)
 
 
 				local Menu = vgui.Create( "DMenu" )		-- Is the same as vgui.Create( "DMenu" )
@@ -1338,7 +1683,7 @@ surface.SetDrawColor( rgb(52, 73, 94, 50) )
 					DFrame:Close()
 					LocalPlayer():PrintMessage( HUD_PRINTTALK, "Loading..." )				
 					Menu:Remove()
-					npcDropsEdit(npc_id,ent,chance,ship,id)
+					npcDropsEdit(npc_id,ent,chance,ship,id,code,label)
 				end
 
 				Menu:SetPos(input.GetCursorPos())
@@ -1371,7 +1716,7 @@ local isEmpty = 0
 					end
 
 				DLabel.DoClick = function()
-					Dmenux(id,v.npc_id,drops.ent,drops.rate,drops.shipment)
+					Dmenux(id,v.npc_id,drops.ent,drops.rate,drops.shipment,drops.code,drops.label)
 					--[[
 					if code and code == 1 then
 						Derma_Query( "Are you sure to delete "..v.npc_id.." ?", "npcDrops Delete", "Yes", function() dermaCallback(v.npc_id) end, "No", function() end)
@@ -1806,175 +2151,92 @@ surface.SetDrawColor( rgb(52, 73, 94, 50) )
 
 			end
 
-		local DScrollPanel = vgui.Create( "DScrollPanel", DFrame )
+		local DScrollPanel = vgui.Create( "flatblurScroll", DFrame )
 		DScrollPanel:SetSize( 565, 300 )
 		DScrollPanel:SetPos( 5, 500 )
 		DScrollPanel:Dock( FILL )
 		DScrollPanel:Center()
 
-		local sbar = DScrollPanel:GetVBar()
-		function sbar:Paint( w, h )
-			draw.RoundedBox( 0, 0, 0, w, h, Color( 0, 0, 0, 100 ) )
-		end
-		function sbar.btnUp:Paint( w, h )
-			draw.RoundedBox( 0, 0, 0, w, h, rgb(231, 76, 60) )
-		end
-		function sbar.btnDown:Paint( w, h )
-			draw.RoundedBox( 0, 0, 0, w, h, rgb(231, 76, 60) )
-		end
-		function sbar.btnGrip:Paint( w, h )
-			draw.RoundedBox( 0, 0, 0, w, h, rgb(189, 195, 199) )
-		end
-	
-			local DLabel = DScrollPanel:Add( "DButton" )
-			DLabel:SetText( "New NPCDrop" )
-			DLabel:SetTall(50)
-			DLabel:SetTooltip( "Create new NPCDrop" )
-			DLabel:SetFont("Trebuchet24")
-			DLabel:SetTextColor(Color(255,255,255))
-			DLabel:Dock( TOP )
-			DLabel:SetEnabled(isEnabled)
-			local oanim = 0
-			local oanimlength = 0			
-			DLabel:DockMargin( 0, 0, 0, 5 )
-			DLabel.Paint = function(s, w, h)
-			if not (isEnabled) then draw.RoundedBox( 0, 0, 0, w, h, rgb(44, 62, 80)) return end
-				if s:IsHovered() then 
-					oanimlength = w 
-				else
-					oanimlength = 3
-				end
-				oanim = math.Approach(oanim,oanimlength,FrameTime()*1200)
-				draw.RoundedBox( 0, 0, 0, w, h, Color(192, 57, 43, 200))
-				draw.RoundedBox( 0, 0, 0, oanim, h, Color(237,74,59,255))
-			end
-
-
-			DLabel.DoClick = function()
+--[[-------------------------------------------------------------------------
+New Button > main gui
+---------------------------------------------------------------------------]]
+			local newBtn = DScrollPanel:Add( "npcDropsButton" )
+			newBtn.isEnabled = function() return isEnabled end
+			newBtn:SetText( "New NPCDrop" )
+			newBtn:SetTall(50)
+			newBtn:SetTooltip( "Create new NPCDrop" )
+			newBtn:SetTextColor(Color(255,255,255))
+			newBtn:Dock( TOP )
+			newBtn:SetEnabled(isEnabled)		
+			newBtn:DockMargin( 0, 0, 0, 5 )
+			newBtn.DoClick = function()
 				npcDrops(tbl)
 				DFrame:Remove()
 			end
-
-
-			local DLabel2 = DScrollPanel:Add( "DButton" )
-			DLabel2:SetText( "Edit existed NPCDrop" )
-			DLabel2:SetTall(50)
-			DLabel2:SetTooltip( "Edit any created NPCDrops" )
-			DLabel2:SetFont("Trebuchet24")
-			DLabel2:SetTextColor(Color(255,255,255))
-			DLabel2:Dock( TOP )
-			DLabel2:SetEnabled(isEnabled )
-			DLabel2:DockMargin( 0, 0, 0, 5 )
-			local oanim2 = 0
-			local oanimlength2 = 0			
-			DLabel2:DockMargin( 0, 0, 0, 5 )
-			DLabel2.Paint = function(s, w, h)
-			if not (isEnabled) then draw.RoundedBox( 0, 0, 0, w, h, rgb(44, 62, 80)) return end
-				if s:IsHovered() then 
-					oanimlength2 = w 
-				else
-					oanimlength2 = 3
-				end
-				oanim2 = math.Approach(oanim2,oanimlength2,FrameTime()*1200)
-				draw.RoundedBox( 0, 0, 0, w, h, Color(192, 57, 43, 200))
-				draw.RoundedBox( 0, 0, 0, oanim2, h, Color(237,74,59,255))
-			end
-
-			DLabel2.DoClick = function()
+--[[-------------------------------------------------------------------------
+Edit Button > main gui
+---------------------------------------------------------------------------]]
+			local editBtn = DScrollPanel:Add( "npcDropsButton" )
+			editBtn.isEnabled = function() return isEnabled end
+			editBtn:SetText( "Edit existed NPCDrop" )
+			editBtn:SetTall(50)
+			editBtn:SetTooltip( "Edit any created NPCDrops" )
+			editBtn:SetTextColor(Color(255,255,255))
+			editBtn:Dock( TOP )
+			editBtn:SetEnabled(isEnabled)
+			editBtn:DockMargin( 0, 0, 0, 5 )		
+			editBtn:DockMargin( 0, 0, 0, 5 )
+			editBtn.DoClick = function()
 				npcDropsList(tbl)
 				DFrame:Remove()
 			end
-
-			local DLabel3 = DScrollPanel:Add( "DButton" )
-			DLabel3:SetText( "Delete NPCDrops" )
-			DLabel3:SetTall(50)
-			DLabel3:SetTooltip( "Delete a NPCDrop" )
-			DLabel3:SetFont("Trebuchet24")
-			DLabel3:SetTextColor(Color(255,255,255))
-			DLabel3:Dock( TOP )
-			DLabel3:SetEnabled(isEnabled )
-			DLabel3:DockMargin( 0, 0, 0, 5 )
-			local oanim3 = 0
-			local oanimlength3 = 0	
-			DLabel3.Paint = function(s, w, h)
-				if not (isEnabled) then draw.RoundedBox( 0, 0, 0, w, h, rgb(44, 62, 80)) return end
-				if s:IsHovered() then 
-					oanimlength3 = w 
-				else
-					oanimlength3 = 3
-				end
-				oanim3 = math.Approach(oanim3,oanimlength3,FrameTime()*1200)
-				
-				draw.RoundedBox( 0, 0, 0, w, h, Color(192, 57, 43, 200))
-				draw.RoundedBox( 0, 0, 0, oanim3, h, Color(237,74,59,255))
-			end
-
-			DLabel3.DoClick = function()			
+--[[-------------------------------------------------------------------------
+Delete Button > main gui
+---------------------------------------------------------------------------]]
+			local deleteBtn = DScrollPanel:Add( "npcDropsButton" )
+			deleteBtn.isEnabled = function() return isEnabled end
+			deleteBtn:SetText( "Delete NPCDrops" )
+			deleteBtn:SetTall(50)
+			deleteBtn:SetTooltip( "Delete a NPCDrop" )
+			deleteBtn:SetTextColor(Color(255,255,255))
+			deleteBtn:Dock( TOP )
+			deleteBtn:SetEnabled(isEnabled )
+			deleteBtn:DockMargin( 0, 0, 0, 5 )
+			deleteBtn.DoClick = function()			
 				npcDropsList(tbl,1)
 				DFrame:Remove()
 			end
 
-			local DLabel4 = DScrollPanel:Add( "DButton" )
-			DLabel4:SetText( "NPCDrops Changelog" )
-			DLabel4:SetTall(50)
-			DLabel4:SetTooltip( "View changelog" )
-			DLabel4:SetFont("Trebuchet24")
-			DLabel4:SetTextColor(Color(255,255,255))
-			DLabel4:Dock( TOP )
-			DLabel4:DockMargin( 0, 0, 0, 5 )
-			local oanim4 = 0
-			local oanimlength4 = 0	
-			DLabel4.Paint = function(s, w, h)
-
-				if s:IsHovered() then 
-					oanimlength4 = w 
-
-				else
-					oanimlength4 = 3
-
-
-				end
-				oanim4 = math.Approach(oanim4,oanimlength4,FrameTime()*1200)
-				draw.RoundedBox( 0, 0, 0, w, h, Color(192, 57, 43, 200))
-
-				draw.RoundedBox( 0, 0, 0, oanim4, h, Color(237,74,59,255))
-			end
-
-			DLabel4.DoClick = function()
+--[[-------------------------------------------------------------------------
+Changelog Button > main gui
+---------------------------------------------------------------------------]]
+			local logBtn = DScrollPanel:Add( "npcDropsButton" )
+			logBtn:SetText( "NPCDrops Changelog" )
+			logBtn.isEnabled = function() return isEnabled end
+			logBtn:SetTall(50)
+			logBtn:SetTooltip( "View changelog" )
+			logBtn:SetTextColor(Color(255,255,255))
+			logBtn:Dock( TOP )
+			logBtn:DockMargin( 0, 0, 0, 5 )
+			logBtn.DoClick = function()
 
 				npcDropsChangelog()
 				DFrame:Remove()
 			end
+--[[-------------------------------------------------------------------------
+Settings Button > main gui
+---------------------------------------------------------------------------]]
+			local cfgButton = DScrollPanel:Add( "npcDropsButton" )
+			cfgButton:SetText( "NPCDrops Settings" )
+			cfgButton.isEnabled = function() return isEnabled end
+			cfgButton:SetTall(50)
+			cfgButton:SetTooltip( "View changelog" )
+			cfgButton:SetTextColor(Color(255,255,255))
+			cfgButton:Dock( TOP )
+			cfgButton:DockMargin( 0, 0, 0, 5 )
+			cfgButton.DoClick = function()
 
-			local DLabel5 = DScrollPanel:Add( "DButton" )
-			DLabel5:SetText( "NPCDrops Settings" )
-			DLabel5:SetTall(50)
-			DLabel5:SetTooltip( "View changelog" )
-			DLabel5:SetFont("Trebuchet24")
-			DLabel5:SetTextColor(Color(255,255,255))
-			DLabel5:Dock( TOP )
-			DLabel5:DockMargin( 0, 0, 0, 5 )
-			local oanim5 = 0
-			local oanimlength5 = 0	
-			DLabel5.Paint = function(s, w, h)
-
-				if s:IsHovered() then 
-					oanimlength5 = w 
-
-				else
-					oanimlength5 = 3
-
-
-				end
-				oanim5 = math.Approach(oanim5,oanimlength5,FrameTime()*1200)
-				draw.RoundedBox( 0, 0, 0, w, h, Color(192, 57, 43, 200))
-
-				draw.RoundedBox( 0, 0, 0, oanim5, h, Color(237,74,59,255))
-			end
-
-			DLabel5.DoClick = function()
-
-				npcDropsSettings()
+				npcDropsSettings(tbl)
 				DFrame:Remove()
 			end
 

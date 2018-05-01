@@ -227,4 +227,30 @@ vgui.Register("flatblurScroll", PANEL, "DScrollPanel")
 
 
 
+PANEL = {}
+
+function PANEL:Init()
+
+self:SetFont("npcDrops_DermaFont")
+self.oanim = 0
+self.oanimlength = 0
+
+end
+local rgb = Color
+function PANEL:Paint(w, h)
+    if not (self.isEnabled()) then draw.RoundedBox( 0, 0, 0, w, h, Color(44, 62, 80)) return end
+        if self:IsHovered() then 
+            self.oanimlength = w 
+        else
+            self.oanimlength = 3
+        end
+        self.oanim = math.Approach(self.oanim,self.oanimlength,FrameTime()*1200)
+        draw.RoundedBox( 0, 0, 0, w, h, Color(192, 57, 43, 200))
+        draw.RoundedBox( 0, 0, 0, self.oanim, h, Color(237,74,59,255))
+    end
+
+
+vgui.Register("npcDropsButton", PANEL, "DButton")
+
+
 
