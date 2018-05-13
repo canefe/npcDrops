@@ -20,13 +20,15 @@ local con = http.Fetch( "https://raw.githubusercontent.com/canefe/npcDrops/maste
 
 
 local dropsTable
-if SERVER then util.AddNetworkString("npcDrops_menu")
+if SERVER then
+util.AddNetworkString("npcDrops_menu")
 util.AddNetworkString("npcDrops_new")
 util.AddNetworkString("npcDrops_edit")
 util.AddNetworkString("npcDrops_delete")
 util.AddNetworkString("npcDrops_reset")
 util.AddNetworkString("npcDrops_refresh")
 util.AddNetworkString("npcDrops_delux")
+util.AddNetworkString("npcDrops_removedrop")
 end
 
 local rgb = Color
@@ -341,26 +343,6 @@ local rgb = Color
 			net.Send(pl)
 	end)
 
-	concommand.Add("+npcDrops", function(ply,cmd,arg)
-
-			if not IsValid(ply) then return end
-			if ply:IsAdmin() then else return end
-
-			local table = sql.Query( "SELECT * FROM npcdrops_data")
-			--if not (IsValid(table) || istable(table)) then npcDrops.notify("Error occured with database. Please reset npcDrops.") return end
-			if not (IsValid(table) || istable(table)) then npcDrops.notify("Error occured with database. Please reset npcDrops.") GetConVar("npcdrops_disabled"):SetBool(1) end
-
-
-			if SERVER then
-			ply:SendLua("local tab={Color(26, 188, 156),[[<npcDrops>: ]],Color(236, 240, 241),[[Menu is loading...]]}chat.AddText(unpack(tab))")
-
-			net.Start("npcDrops_menu")
-				if IsValid(table) || istable(table) then net.WriteTable(table) end
-			net.Send(ply)
-		end
-
-	end)
-
 	hook.Add( "PlayerSay", "npcDrops_chat", function( ply, msg, group )
 		local comchattable = string.Explode( " ", msg )
 		if ( comchattable[1] == "!npcdrops" ) then
@@ -382,29 +364,27 @@ local rgb = Color
 			end
 			return false
 		end
-	end )	
+	end )
 
-	concommand.Add("npcDrops_removedrop", function(ply,cmd,arg)
+	net.Receive("npcDrops_removedrop", function(len,pl)
 
-		--[[ arg 1 -> npc_id arg 2 -> key
+		local npc = net.ReadString()
+		local id  = net.ReadString()
 
-		]]
-		if not IsValid(ply) then return end
-		if ply:IsAdmin() then else return end
-
-		local tab = sql.Query( "SELECT * FROM npcdrops_data WHERE npc_id = '"..arg[1].."'")
+		local tab = sql.Query( "SELECT * FROM npcdrops_data WHERE npc_id = '"..npc.."'")
 		local drops = util.JSONToTable(tab[1].data)
 		--print("---------------LOK AT Menu	")
 		--PrintTable(drops[1])
-		local num = tonumber(math.floor(arg[2]))
+		local num = tonumber(math.floor(id))
 		--print("num=",num)
 		--PrintTable(drops[arg[2]])
 		drops[num] = nil
 
-		local query = "UPDATE npcdrops_data SET data = '"..util.TableToJSON(drops).."' WHERE npc_id = '"..arg[1].."'"
+		local query = "UPDATE npcdrops_data SET data = '"..util.TableToJSON(drops).."' WHERE npc_id = '"..npc.."'"
 		sql.Query(query)
 
-		npcDrops.notify("Successfully removed the drop from "..arg[1])						
+		npcDrops.notify("Successfully removed the drop from "..npc)					
+
 
 	end)
 
@@ -445,7 +425,7 @@ local rgb = Color
 } )
 
 
-local function Anakinn(number)
+local function Anakinn(number) -- by fexa D:
 	number = tonumber(number)
 	if number==0 or number>1 then return end
 
@@ -792,28 +772,7 @@ if CLIENT then
 				draw.RoundedBox(0,0,0,w,h,rgb(231, 76, 60))
 			end
 
-			local DCollapsible2 = vgui.Create( "DCollapsibleCategory", DScrollPanel )
-			DCollapsible2:Dock(TOP)					
-			DCollapsible2:SetSize( 400, 100 )					
-			DCollapsible2:SetExpanded( 0 )											
-			DCollapsible2:SetLabel( "Lootbox Settings" )						
-			DCollapsible2.Paint = function(s,w,h)
-				draw.RoundedBox(0,0,0,w,h,rgb(231, 76, 60))
-			end
 
-			local advancedCategory = vgui.Create( "DCollapsibleCategory", DScrollPanel )
-			advancedCategory:Dock(TOP)					
-			advancedCategory:SetSize( 400, 100 )					
-			advancedCategory:SetExpanded( 0 )											
-			advancedCategory:SetLabel( "Advanced Settings" )						
-			advancedCategory.Paint = function(s,w,h)
-				draw.RoundedBox(0,0,0,w,h,rgb(231, 76, 60))
-			end
-
-			local advancedSettings = vgui.Create( "DPanelList", frame )	
-				advancedSettings:EnableHorizontal( false )			
-				advancedSettings:EnableVerticalScrollbar( true )		
-				advancedCategory:SetContents( advancedSettings )
 	
 	
 
@@ -911,13 +870,9 @@ end
 
 				local notd = vgui.Create( "DLabel",  frame  )
 				notd:Dock(BOTTOM)
-				notd:SetText( "npcDrops by cometopapa 2017" )
+				notd:SetText( "npcDrops by cometopapa 2018" )
 				notd:SizeToContents() -- "General Settings"
 
-			local LootboxSettings = vgui.Create( "DPanelList", frame )
-				LootboxSettings:EnableHorizontal( false )			
-				LootboxSettings:EnableVerticalScrollbar( true )		
-				DCollapsible2:SetContents( LootboxSettings )
 
 				
 
@@ -1211,7 +1166,9 @@ ENT:Remove()
  -- you can change it
 timer.Simple(10, function()
  -- remove old one
+if IsValid(ENT) then
 ENT:Remove() 
+end
 end)
 	]])
 		end
@@ -1652,14 +1609,20 @@ surface.SetDrawColor( rgb(52, 73, 94, 50) )
 	end
 	local function tCallback(npc,id)
 
-			RunConsoleCommand( "npcdrops_removedrop", npc,id )
+			
+
+			net.Start("npcDrops_removedrop")
+				net.WriteString( npc )
+				net.WriteString( id )
+			net.SendToServer()
+
 
 			DFrame:Remove()
 
 
-				net.Start("npcdrops_refresh")
+			net.Start("npcdrops_refresh")
 
-				net.SendToServer()
+			net.SendToServer()
 
 
 	end
@@ -1702,7 +1665,7 @@ local isEmpty = 0
 				local DLabel = DScrollPanel:Add( "DButton" )
 				DLabel:SetText( drops.ent .." - Chance: ".. drops.rate .." - isShipment: ".. tostring(drops.shipment) )
 				DLabel:SetTall(50)
-				DLabel:SetFont("Trebuchet24")
+				DLabel:SetFont("DermaLarge")
 				DLabel:SetToolTip(" ")
 				DLabel:SetTextColor(Color(255,255,255))
 				DLabel:Dock( TOP )
@@ -1857,7 +1820,7 @@ local isEmpty = 0
 			local DLabel = DScrollPanel:Add( "DButton" )
 			DLabel:SetText( v.npc_id )
 			DLabel:SetTall(50)
-			DLabel:SetFont("Trebuchet24")
+			DLabel:SetFont("DermaLarge")
 			DLabel:SetToolTip(" ")
 			DLabel:SetTextColor(Color(255,255,255))
 			DLabel:Dock( TOP )
@@ -2016,24 +1979,6 @@ surface.SetDrawColor( rgb(52, 73, 94, 50) )
 
 
 			end	
-		local richtext = vgui.Create( "RichText", frame )
-		--richtext:Dock( FILL )
-		richtext:SetPos( 0, 150)
-		richtext:SetSize( 200, 40)
-		
-
-		function richtext:PerformLayout()
-
-			self:SetFontInternal( "Default" )
-			self:SetBGColor( Color( 64, 64, 92 ) )
-
-
-		end
-
-		richtext:InsertColorChange( 255,255,255,255 )
-		richtext:SetVerticalScrollbarEnabled( false )
-
-
 
 		local btn_submit = vgui.Create( "DButton", frame )
 		btn_submit:SetText( "Add New" )
@@ -2052,11 +1997,11 @@ surface.SetDrawColor( rgb(52, 73, 94, 50) )
 				end
 				checke = 0
 			end
-			if npcidraw and entityidraw then richtext:SetText("OK.") else  richtext:SetText(" NPCID or EntityID is invalid!") anyerror = anyerror + 1 end
-			if (checke == 1) then richtext:AppendText("Already a npc with this id! ") anyerror = anyerror + 1 end
+			if npcidraw and entityidraw then else anyerror = anyerror + 1 end
+			if (checke == 1) then anyerror = anyerror + 1 end
 			
 
-			if not (anyerror == 0) then richtext:InsertFade( 6, 2 ) return end
+			if not (anyerror == 0) then return end
 			
 			net.Start("npcDrops_new")
 				net.WriteString(npcidraw)
@@ -2095,65 +2040,29 @@ surface.SetDrawColor( rgb(52, 73, 94, 50) )
 
 	end
 
-	local function npcDropsGUI()
+	function npcDropsGUI()
 
 		local tbl = net.ReadTable()
-		local isEnabled = not GetConVar("npcdrops_disabled"):GetBool()
-		local DFrame = vgui.Create( "DFrame" )
-		DFrame:SetSize( 570, 30 )
-		DFrame:SizeTo( 570, 350, 0.5, 0, -1 ) -- little faster gui opening
+		PrintTable(tbl)
 
+		local isEnabled = not GetConVar("npcdrops_disabled"):GetBool()
+
+--[[-------------------------------------------------------------------------
+Main GUI frame
+---------------------------------------------------------------------------]]
+		local DFrame = vgui.Create( "flatblur" )
+		DFrame:SetSize( 570, 30 )
+		DFrame:SizeTo( 570, 350, 0.5, 0, -1 )
 		DFrame:Center() 
 		DFrame:MakePopup()
 		DFrame:SetTitle("npcDrops ~ Main Menu")
 		DFrame:ShowCloseButton( false )
-		local btn_close = vgui.Create( "DButton", DFrame )
-		btn_close:SetText( "" )
-		btn_close:SetTall(22)
-		btn_close:SetWide(22)
-		btn_close:SetPos( DFrame:GetWide() - 22, 0 )
-		btn_close.DoClick = function()
-				DFrame:Remove()
-		end
-		btn_close.Paint = function(s, w, h)
-			if s:IsHovered() then 
-				draw.RoundedBox(0,0,0,w,h,rgb(231, 76, 60))
-			else
-				draw.RoundedBox(0,0,0,w,h,rgb(192, 57, 43))
-			end
-		end		
-		DFrame.Paint = function(s, w, h)
-				surface.SetMaterial( matBlurScreen )
-				surface.SetDrawColor( 255, 255, 255, 255 )				
-				local wx, wy = DFrame:GetPos()
-				local us = wx / ScrW()
-				local vs = wy / ScrH()
-				local ue = ( wx + w ) / ScrW()
-				local ve = ( wy + h ) / ScrH()
-		
-				local ew = 16
-				
-				for i = 1, ew do
-					
-					matBlurScreen:SetFloat( "$blur", 1 * 5 * ( i / ew ) )
-					matBlurScreen:Recompute()
-					render.UpdateScreenEffectTexture()
-					surface.DrawTexturedRectUV( 0, 0, w, h, us, vs, ue, ve )
-					
-				end
+	
 
-			surface.SetDrawColor( rgb(52, 73, 94, 50) )
-			surface.DrawRect( 0, 0, w, h )
-			surface.SetDrawColor( Color( 40, 40, 40, 100 ) )
-			surface.DrawOutlinedRect( 0, 0, w, h )
-			surface.SetDrawColor( rgb(44, 62, 80) )
-			surface.DrawRect( 0, 0, w - 22, 22 )				
-
-			end
-
+--[[-------------------------------------------------------------------------
+Main GUI ScrollPanel
+---------------------------------------------------------------------------]]
 		local DScrollPanel = vgui.Create( "flatblurScroll", DFrame )
-		DScrollPanel:SetSize( 565, 300 )
-		DScrollPanel:SetPos( 5, 500 )
 		DScrollPanel:Dock( FILL )
 		DScrollPanel:Center()
 
@@ -2241,20 +2150,21 @@ Settings Button > main gui
 			end
 
 
-		local richtext = vgui.Create( "RichText", DFrame )
-		richtext:SetPos( 200, 330)
-		richtext:SetSize( 570, 30)
+		local richtext = DScrollPanel:Add("RichText")
+		richtext:Dock( TOP )
+		richtext:DockMargin( 0, 0, 0, 10)
+		--richtext:SetSize( 570, 30)
 
 		function richtext:PerformLayout()
 
-			self:SetFontInternal( "UiBold" )
+			self:SetFontInternal( "DermaDefault" )
 
 
 		end
 		-- #credit text
 		richtext:InsertColorChange( 255,255,255, 255 )
 		richtext:SetVerticalScrollbarEnabled( false )
-		richtext:SetFontInternal( "Trebuchet18" )
+		--richtext:SetFontInternal( "Default" )
 
 		richtext:AppendText("Created by cometopapa")
 		richtext:InsertFade( 3, 2 )
