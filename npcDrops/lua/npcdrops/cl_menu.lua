@@ -231,7 +231,7 @@ PANEL = {}
 
 function PANEL:Init()
 
-self:SetFont("npcDrops_DermaFont")
+self:SetFont("DermaLarge")
 self.oanim = 0
 self.oanimlength = 0
 
