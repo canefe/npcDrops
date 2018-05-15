@@ -2193,7 +2193,7 @@ Settings Button > main gui
 	end
 	net.Receive("npcDrops_menu",npcDropsGUI)
 
-
+end
 
 
 
