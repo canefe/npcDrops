@@ -629,7 +629,7 @@ if CLIENT then
 										a,b = surface.GetTextSize(GetConVar("npcDrops_common"):GetString())
 										surface.DrawRect(  (-a * 0.5) - 230, -180 + math.sin( CurTime() ) * 50, a + 500 , 180 )
 										draw.SimpleText( v:GetNWString("npcDropname"), "npcDrops_itemFont", 0, 90 + math.sin( CurTime() ) * 50, Color( 255, 255, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-										DrawElectricText(1, string.upper(GetConVar("npcDrops_common"):GetString()), "npcDrops_itemFont", 0, -90 + math.sin( CurTime() ) * 50, rgb(243, 156, 18), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+										DrawElectricText(1, string.upper(GetConVar("npcDrops_common"):GetString()), "npcDrops_itemFont", 0, -90 + math.sin( CurTime() ) * 50, rgb(243, 156, 18), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 									end
 									if textV == 3 then
 										a,b = surface.GetTextSize(GetConVar("npcDrops_uncommon"):GetString())
