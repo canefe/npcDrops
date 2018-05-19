@@ -1,6 +1,6 @@
 -- npcDrops base file - npcDrops by cmetopapa
 AddCSLuaFile()
-local version = "1.6" 
+local version = "1.6.2" 
 
 npcDrops = npcDrops or {} -- in-lua data 
 
@@ -455,7 +455,7 @@ end
 		local passes = {}
 		for k,v in pairs(med) do
 			local rate = math.Rand( 0, 1 )
-			if GetConVar("npcdrops_debug"):GetBool() then v.rate = 1 end
+			if GetConVar("npcdrops_debug"):GetBool() then passes[v.ent] = v end
 			local hector
 			--if #med == 1 then hector = med else hector = med[k] end
 			if rate <= tonumber(v.rate) or v.rate == 1 then print("got you") passes[v.ent] = v end
@@ -485,8 +485,7 @@ end
 						PrintTable(passes)
 						local item = ents.Create(v.ent)
 
-						if v.labelrem and tobool(v.labelrem) == false then
-							print(v.labelrem,"got pasd")
+						if tobool(v.labelrem) == false or v.labelrem == nil then
 						item:SetNWBool("isnpcDrop",true)
 						end
 						item:SetNWInt("npcDropdly", CurTime() + GetConVar("npcdrops_itemremovedly"):GetInt())
@@ -495,14 +494,12 @@ end
 						item:SetNWString("npcDropname", name)
 						item:SetNWInt("npcDroprate", tonumber(v.rate))
 						local luaToRun = v.code
-						print("vcode is=",v.code,v.labelrem)
 						npcDrops.EntVal = item
 						npcDrops.Killer = killer
 						npcDrops.NPC 	= npc
 						local playerLua = "local ENT = npcDrops.EntVal local PLY = npcDrops.Killer local NPC = npcDrops.NPC "
 
 						if IsValid(item) and tobool(luaToRun) != false then
-						print("hey")
 						RunString(playerLua..luaToRun, "npcDrops-Lua")
 						npcDrops.EntVal = nil
 						npcDrops.Killer = nil
@@ -619,34 +616,39 @@ if CLIENT then
 									local ew, eh = surface.GetTextSize(v:GetNWString("npcDropname"))
 									local fw = (ew + 500)
 									local xpos = (-ew * 0.5) 
-									
+									local a,b 
 									surface.DrawRect( xpos - 230, 0 + math.sin( CurTime() ) * 50, fw, 200 )
 									if textV == 1 then
-										surface.DrawRect( -300, -180 + math.sin( CurTime() ) * 50, 600  , 180 )
-										DrawElectricText(1, "BASIC", "npcDrops_itemFont", -130, -150 + math.sin( CurTime() ) * 50, rgb(39, 174, 96), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)								
+										a,b = surface.GetTextSize(GetConVar("npcDrops_basic"):GetString())
+										surface.DrawRect(  (-a * 0.5) - 230, -180 + math.sin( CurTime() ) * 50, a + 500 , 180 )
+										DrawElectricText(1, string.upper(GetConVar("npcDrops_basic"):GetString()), "npcDrops_itemFont", 0, -90 + math.sin( CurTime() ) * 50, rgb(39, 174, 96), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)								
 										draw.SimpleText( v:GetNWString("npcDropname"), "npcDrops_itemFont", 0, 90 + math.sin( CurTime() ) * 50, Color( 255, 255, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+
 									end
 									if textV == 2 then
-										surface.DrawRect( -300, -180 + math.sin( CurTime() ) * 50, 600  , 180 )
+										a,b = surface.GetTextSize(GetConVar("npcDrops_common"):GetString())
+										surface.DrawRect(  (-a * 0.5) - 230, -180 + math.sin( CurTime() ) * 50, a + 500 , 180 )
 										draw.SimpleText( v:GetNWString("npcDropname"), "npcDrops_itemFont", 0, 90 + math.sin( CurTime() ) * 50, Color( 255, 255, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-										DrawElectricText(1, "COMMON", "npcDrops_itemFont", -200, -150 + math.sin( CurTime() ) * 50, rgb(243, 156, 18), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+										DrawElectricText(1, string.upper(GetConVar("npcDrops_common"):GetString()), "npcDrops_itemFont", 0, -90 + math.sin( CurTime() ) * 50, rgb(243, 156, 18), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
 									end
 									if textV == 3 then
-										surface.DrawRect( -300, -180 + math.sin( CurTime() ) * 50, 600, 180 )
+										a,b = surface.GetTextSize(GetConVar("npcDrops_uncommon"):GetString())
+										surface.DrawRect(  (-a * 0.5) - 230, -180 + math.sin( CurTime() ) * 50, a + 500 , 180 )
 										draw.SimpleText( v:GetNWString("npcDropname"), "npcDrops_itemFont", 0, 90 + math.sin( CurTime() ) * 50, Color( 255, 255, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-										DrawFadingText(1, "UNCOMMON", "npcDrops_itemFont", -240, -150 + math.sin( CurTime() ) * 50, rgb(22, 160, 133), rgb(44, 62, 80))
+										DrawFadingText(1, string.upper(GetConVar("npcDrops_uncommon"):GetString()), "npcDrops_itemFont", 0, -90 + math.sin( CurTime() ) * 50, rgb(22, 160, 133), rgb(44, 62, 80), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 										
 									end
 									if textV == 4 then
-										surface.DrawRect( -300, -180 + math.sin( CurTime() ) * 50, 600, 180 )
+										a,b = surface.GetTextSize(GetConVar("npcDrops_rare"):GetString())
+										surface.DrawRect(  (-a * 0.5) - 230, -180 + math.sin( CurTime() ) * 50, a + 500 , 180 )
 										draw.SimpleText( v:GetNWString("npcDropname"), "npcDrops_itemFont", 0, 90 + math.sin( CurTime() ) * 50, Color( 255, 255, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-										DrawEnchantedText(2, "RARE", "npcDrops_itemFont", -110, -150 + math.sin( CurTime() ) * 50, Color(255, 0, 0), Color(0, 0, 255))
+										DrawEnchantedText(2, string.upper(GetConVar("npcDrops_rare"):GetString()), "npcDrops_itemFont", 0, -90 + math.sin( CurTime() ) * 50, Color(255, 0, 0), Color(0, 0, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 									end
 									if textV == 5 then
-										
-										surface.DrawRect( -300, -180 + math.sin( CurTime() ) * 50, 600  , 180 )
+										a,b = surface.GetTextSize(GetConVar("npcDrops_epic"):GetString())
+										surface.DrawRect(  (-a * 0.5) - 230, -180 + math.sin( CurTime() ) * 50, a + 500 , 180 )
 										draw.SimpleText( v:GetNWString("npcDropname"), "npcDrops_itemFont", 0, 90 + math.sin( CurTime() ) * 50, Color( 255, 255, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-										DrawRainbowText(5, "EPIC", "npcDrops_itemFont", -100, -150 + math.sin( CurTime() ) * 50)
+										DrawRainbowText(5, string.upper(GetConVar("npcDrops_epic"):GetString()), "npcDrops_itemFont", 0, -90 + math.sin( CurTime() ) * 50, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 									end
 
 								cam.End3D2D()
@@ -771,6 +773,14 @@ if CLIENT then
 			DCollapsible.Paint = function(s,w,h)
 				draw.RoundedBox(0,0,0,w,h,rgb(231, 76, 60))
 			end
+			local DCustom = vgui.Create( "DCollapsibleCategory", DScrollPanel )	// Create a collapsible category
+			DCustom:Dock(TOP)									 // Set position
+			DCustom:SetSize( 400, 100 )										 // Set size
+			DCustom:SetExpanded( 0 )											 // Is it expanded when you open the panel?
+			DCustom:SetLabel( "Custom Rarity" )							// Set the name ( label )
+			DCustom.Paint = function(s,w,h)
+				draw.RoundedBox(0,0,0,w,h,rgb(231, 76, 60))
+			end			
 
 
 	
@@ -779,6 +789,53 @@ if CLIENT then
 				local generalBar = vgui.Create("flatblurScroll", frame)
 				generalBar:SetSBColor( rgb(192, 57, 43))
 				DCollapsible:SetContents( generalBar )
+
+				local customBar = vgui.Create("flatblurScroll", frame)
+				customBar:SetSBColor( rgb(192, 57, 43))
+				DCustom:SetContents( customBar )
+
+
+				local DBasic = vgui.Create( "DLabel", customBar )
+				DBasic:Dock( TOP )
+				DBasic:SetText( "Basic" )
+
+				local Basic = vgui.Create( "DTextEntry", customBar ) -- create the form as a child of frame
+				Basic:Dock( TOP )
+				Basic:SetConVar( "npcdrops_basic")
+
+				local DCommon = vgui.Create( "DLabel", customBar )
+				DCommon:Dock( TOP )
+				DCommon:SetText( "Common" )
+
+				local Common = vgui.Create( "DTextEntry", customBar ) -- create the form as a child of frame
+				Common:Dock( TOP )
+				Common:SetConVar( "npcdrops_common")
+
+				local DUncommon = vgui.Create( "DLabel", customBar )
+				DUncommon:Dock( TOP )
+				DUncommon:SetText( "Uncommon" )
+
+				local CUncommon = vgui.Create( "DTextEntry", customBar ) -- create the form as a child of frame
+				CUncommon:Dock( TOP )
+				CUncommon:SetConVar( "npcdrops_uncommon")
+
+				local DRare = vgui.Create( "DLabel", customBar )
+				DRare:Dock( TOP )
+				DRare:SetText( "Rare" )
+
+				local CRare = vgui.Create( "DTextEntry", customBar ) -- create the form as a child of frame
+				CRare:Dock( TOP )
+				CRare:SetConVar( "npcdrops_rare")
+
+				local DEpic = vgui.Create( "DLabel", customBar )
+				DEpic:Dock( TOP )
+				DEpic:SetText( "Epic" )
+
+				local CEpic = vgui.Create( "DTextEntry", customBar ) -- create the form as a child of frame
+				CEpic:Dock( TOP )
+				CEpic:SetConVar( "npcdrops_epic")
+		
+
 				local Don = vgui.Create( "DCheckBoxLabel", generalBar )
 					Don:Dock( TOP )
 					Don:SetText( "Disable npcDrops?" )
@@ -1025,8 +1082,9 @@ end
 
 		local remlabel = labelrem
 		local boolLabel = vgui.Create( "DCheckBox", panel1 ) 
+			print("label rem is da", labelrem)
 			boolLabel:SetPos( 20, 120 )
-			boolLabel:SetValue(ship)
+			boolLabel:SetValue(labelrem)
 			boolLabel:SetTooltip("Remove label for this item")
 			function boolLabel:OnChange( bVal )
 				if ( bVal ) then
@@ -1626,7 +1684,7 @@ surface.SetDrawColor( rgb(52, 73, 94, 50) )
 
 
 	end
-	local function Dmenux(id,npc_id,ent,chance,ship,code,label)
+	local function Dmenux(id,npc_id,ent,chance,ship,code,label,labelrem)
 
 
 				local Menu = vgui.Create( "DMenu" )		-- Is the same as vgui.Create( "DMenu" )
@@ -1646,7 +1704,7 @@ surface.SetDrawColor( rgb(52, 73, 94, 50) )
 					DFrame:Close()
 					LocalPlayer():PrintMessage( HUD_PRINTTALK, "Loading..." )				
 					Menu:Remove()
-					npcDropsEdit(npc_id,ent,chance,ship,id,code,label)
+					npcDropsEdit(npc_id,ent,chance,ship,id,code,label,labelrem)
 				end
 
 				Menu:SetPos(input.GetCursorPos())
@@ -1679,7 +1737,7 @@ local isEmpty = 0
 					end
 
 				DLabel.DoClick = function()
-					Dmenux(id,v.npc_id,drops.ent,drops.rate,drops.shipment,drops.code,drops.label)
+					Dmenux(id,v.npc_id,drops.ent,drops.rate,drops.shipment,drops.code,drops.label,drops.labelrem)
 					--[[
 					if code and code == 1 then
 						Derma_Query( "Are you sure to delete "..v.npc_id.." ?", "npcDrops Delete", "Yes", function() dermaCallback(v.npc_id) end, "No", function() end)
