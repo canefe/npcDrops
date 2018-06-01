@@ -1,6 +1,6 @@
 -- npcDrops base file - npcDrops by cmetopapa
 AddCSLuaFile()
-local version = "1.6.2" 
+local version = "1.6.3" 
 
 npcDrops = npcDrops or {} -- in-lua data 
 
@@ -388,6 +388,8 @@ local rgb = Color
 
 	end)
 
+
+
 	function npcDrops.getvName(class)
 		 for k,v in pairs( weapons.GetList() ) do
 
@@ -483,72 +485,126 @@ end
 
 
 						PrintTable(passes)
-						local item = ents.Create(v.ent)
+						if not string.StartWith( v.ent , "f:") then -- check if its food or not
+							local item = ents.Create(v.ent)
 
-						if tobool(v.labelrem) == false or v.labelrem == nil then
-						item:SetNWBool("isnpcDrop",true)
-						end
-						item:SetNWInt("npcDropdly", CurTime() + GetConVar("npcdrops_itemremovedly"):GetInt())
-						local name
-						if v.label and tobool(v.label) != false then name = v.label else name = npcDrops.getvName(v.ent) end
-						item:SetNWString("npcDropname", name)
-						item:SetNWInt("npcDroprate", tonumber(v.rate))
-						local luaToRun = v.code
-						npcDrops.EntVal = item
-						npcDrops.Killer = killer
-						npcDrops.NPC 	= npc
-						local playerLua = "local ENT = npcDrops.EntVal local PLY = npcDrops.Killer local NPC = npcDrops.NPC "
+							if tobool(v.labelrem) == false or v.labelrem == nil then
+							item:SetNWBool("isnpcDrop",true)
+							end
+							item:SetNWInt("npcDropdly", CurTime() + GetConVar("npcdrops_itemremovedly"):GetInt())
+							local name
+							if v.label and tobool(v.label) != false then name = v.label else name = npcDrops.getvName(v.ent) end
+							item:SetNWString("npcDropname", name)
+							item:SetNWInt("npcDroprate", tonumber(v.rate))
+							local luaToRun = v.code
+							npcDrops.EntVal = item
+							npcDrops.Killer = killer
+							npcDrops.NPC 	= npc
+							local playerLua = "local ENT = npcDrops.EntVal local PLY = npcDrops.Killer local NPC = npcDrops.NPC "
 
-						if IsValid(item) and tobool(luaToRun) != false then
-						RunString(playerLua..luaToRun, "npcDrops-Lua")
-						npcDrops.EntVal = nil
-						npcDrops.Killer = nil
-						npcDrops.NPC    = nil
-						end
-						--[[
-						print("test=",table.Count(passes) == 1,table.Count(passes))
-						if not (table.Count(passes) == 1) then
-						local lootbox = ents.Create("npcDrops_loot")
-						lootbox:SetPos(npc:GetPos())
-						lootbox.itemTable = {
-								ent = v.ent,
-								rate = v.rate,
-							}
-						print("lootbox.itemtable=",lootbox.itemTable)
-						PrintTable(lootbox.itemTable)
+							if IsValid(item) and tobool(luaToRun) != false then
+							RunString(playerLua..luaToRun, "npcDrops-Lua")
+							npcDrops.EntVal = nil
+							npcDrops.Killer = nil
+							npcDrops.NPC    = nil
+							end
+							--[[
+							print("test=",table.Count(passes) == 1,table.Count(passes))
+							if not (table.Count(passes) == 1) then
+							local lootbox = ents.Create("npcDrops_loot")
+							lootbox:SetPos(npc:GetPos())
+							lootbox.itemTable = {
+									ent = v.ent,
+									rate = v.rate,
+								}
+							print("lootbox.itemtable=",lootbox.itemTable)
+							PrintTable(lootbox.itemTable)
 
-						end--]]
+							end--]]
 
-						
-						if not IsValid(item) then check = 1 end
+							
+							if not IsValid(item) then check = 1 end
 
-						if check == 1 then
-							npcDrops.notify("\nAn error occured about entity! \nSomething wrong with entity!\n"..v.ent.." is not a valid entity!\n")
+							if check == 1 then
+								npcDrops.notify("\nAn error occured about entity! \nSomething wrong with entity!\n"..v.ent.." is not a valid entity!\n")
 
-							MsgC( Color( 255, 0, 0 ), "[ERROR]", rgb(230, 126, 34), " <npcDrops>: ", rgb(231, 76, 60), " An error occured: \nSomething wrong with entity!\n"..v.ent.." is not a entity!\n"  )
-							return
-						end	
-						item:SetPos( npc:GetPos() + Vector(0,0,50) )
-
-
-
+								MsgC( Color( 255, 0, 0 ), "[ERROR]", rgb(230, 126, 34), " <npcDrops>: ", rgb(231, 76, 60), " An error occured: \nSomething wrong with entity!\n"..v.ent.." is not a entity!\n"  )
+								return
+							end	
+							item:SetPos( npc:GetPos() + Vector(0,0,50) )
 
 
 
-						item:Spawn()
 
 
 
-						print("[npcDrops] NPC_id: "..npc:GetClass().." dropped item. Chance Rate: "..v.rate)
-						if shouldNotify and (tonumber(v.rate) <= 0.8) then killer:SendLua("local tab={Color(26, 188, 156),[[<npcDrops>: ]],Color(236, 240, 241),[[Congratulations! You have dropped '"..npcDrops.getvName(v.ent).."' with rate "..Anakinn(v.rate).."!]]}chat.AddText(unpack(tab))") end
-						if GetConVar("npcdrops_itemremove"):GetBool() then
-							timer.Simple(GetConVar("npcdrops_itemremovedly"):GetInt(), function()
-								if not IsValid(item) then return end
-
-								item:Remove()
+							item:Spawn()
 
 
-							end)
+
+							print("[npcDrops] NPC_id: "..npc:GetClass().." dropped item. Chance Rate: "..v.rate)
+							if shouldNotify and (tonumber(v.rate) <= 0.8) then killer:SendLua("local tab={Color(26, 188, 156),[[<npcDrops>: ]],Color(236, 240, 241),[[Congratulations! You have dropped '"..npcDrops.getvName(v.ent).."' with rate "..Anakinn(v.rate).."!]]}chat.AddText(unpack(tab))") end
+							if GetConVar("npcdrops_itemremove"):GetBool() then
+								timer.Simple(GetConVar("npcdrops_itemremovedly"):GetInt(), function()
+									if not IsValid(item) then return end
+
+									item:Remove()
+
+
+								end)
+							end
+						else
+							local ash = string.gsub( v.ent, "f:", "" ) -- removing f: prefix
+							v.ent = ash -- setting new name
+							local debugger = 0
+							for id,food in pairs(FoodItems) do -- looping FoodItems table -- hungermod must be activated
+								if food.name == v.ent then
+							        local SpawnedFood = ents.Create("spawned_food") -- creating food
+							        SpawnedFood:Setowning_ent(killer)
+							        SpawnedFood:SetPos(npc:GetPos() + Vector(0,0,50))
+							        SpawnedFood.onlyremover = true
+							        SpawnedFood.SID = killer.SID
+							        SpawnedFood:SetModel(food.model)
+
+							        -- for backwards compatibility
+							        SpawnedFood.FoodName = food.name
+							        SpawnedFood.FoodEnergy = food.energy
+							        SpawnedFood.FoodPrice = food.price
+							        SpawnedFood.foodItem = food
+							        SpawnedFood:Spawn()
+							        if IsValid(SpawnedFood) then
+							        	debugger = 1
+							        end
+							    --[[-------------------------------------------------------------------------
+							    other junks for food
+							    ---------------------------------------------------------------------------]]
+								if tobool(v.labelrem) == false or v.labelrem == nil then
+								SpawnedFood:SetNWBool("isnpcDrop",true)
+								end
+								SpawnedFood:SetNWInt("npcDropdly", CurTime() + GetConVar("npcdrops_itemremovedly"):GetInt())
+								local name
+								if v.label and tobool(v.label) != false then name = v.label else name = npcDrops.getvName(v.ent) end
+								SpawnedFood:SetNWString("npcDropname", name)
+								SpawnedFood:SetNWInt("npcDroprate", tonumber(v.rate))
+								local luaToRun = v.code
+								npcDrops.EntVal = item
+								npcDrops.Killer = killer
+								npcDrops.NPC 	= npc
+								local playerLua = "local ENT = npcDrops.EntVal local PLY = npcDrops.Killer local NPC = npcDrops.NPC "
+
+								if IsValid(item) and tobool(luaToRun) != false then
+								RunString(playerLua..luaToRun, "npcDrops-Lua")
+								npcDrops.EntVal = nil
+								npcDrops.Killer = nil
+								npcDrops.NPC    = nil
+							end
+
+
+							    end
+							end
+							if debugger == 0 then -- notify if there is smth wrong
+								npcDrops.notify("\nAn error occured about entity! \nSomething wrong with entity!\n"..v.ent.." is not a valid FOOD \n(remove f: if you don't want food)!")
+							end
 						end
 
 
@@ -1978,6 +2034,7 @@ surface.SetDrawColor( rgb(52, 73, 94, 50) )
 			end
 		end		
 
+
 		local npcidraw
 		local npcID = vgui.Create( "DTextEntry", frame )
 			npcID:SetPos( 20, 30 )
@@ -2074,7 +2131,6 @@ surface.SetDrawColor( rgb(52, 73, 94, 50) )
 		 	net.Start("npcDrops_refresh")
 
 		 	net.SendToServer()
-
 
 
 
