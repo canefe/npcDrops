@@ -1,6 +1,6 @@
 -- npcDrops base file - npcDrops by cmetopapa
 AddCSLuaFile()
-local version = "1.6.3" 
+local version = "1.6.4" 
 
 npcDrops = npcDrops or {} -- in-lua data 
 
@@ -491,6 +491,7 @@ end
 							if tobool(v.labelrem) == false or v.labelrem == nil then
 							item:SetNWBool("isnpcDrop",true)
 							end
+							item.npcDrops = true
 							item:SetNWInt("npcDropdly", CurTime() + GetConVar("npcdrops_itemremovedly"):GetInt())
 							local name
 							if v.label and tobool(v.label) != false then name = v.label else name = npcDrops.getvName(v.ent) end
@@ -508,19 +509,6 @@ end
 							npcDrops.Killer = nil
 							npcDrops.NPC    = nil
 							end
-							--[[
-							print("test=",table.Count(passes) == 1,table.Count(passes))
-							if not (table.Count(passes) == 1) then
-							local lootbox = ents.Create("npcDrops_loot")
-							lootbox:SetPos(npc:GetPos())
-							lootbox.itemTable = {
-									ent = v.ent,
-									rate = v.rate,
-								}
-							print("lootbox.itemtable=",lootbox.itemTable)
-							PrintTable(lootbox.itemTable)
-
-							end--]]
 
 							
 							if not IsValid(item) then check = 1 end
@@ -541,13 +529,13 @@ end
 							item:Spawn()
 
 
-
 							print("[npcDrops] NPC_id: "..npc:GetClass().." dropped item. Chance Rate: "..v.rate)
 							if shouldNotify and (tonumber(v.rate) <= 0.8) then killer:SendLua("local tab={Color(26, 188, 156),[[<npcDrops>: ]],Color(236, 240, 241),[[Congratulations! You have dropped '"..npcDrops.getvName(v.ent).."' with rate "..Anakinn(v.rate).."!]]}chat.AddText(unpack(tab))") end
 							if GetConVar("npcdrops_itemremove"):GetBool() then
 								timer.Simple(GetConVar("npcdrops_itemremovedly"):GetInt(), function()
 									if not IsValid(item) then return end
-
+									if item:IsWeapon() and item.hasTaken then return end
+									if item.dontRemove then return end
 									item:Remove()
 
 
@@ -620,6 +608,14 @@ end
 	end
 
 	hook.Add("OnNPCKilled", "DropShipOnNPCKilled", onEnpisiKild)
+
+
+	hook.Add("WeaponEquip","npcDrops pickupSwep", function(swep,owner) -- prevent weapon removal after equip hook
+		if not IsValid(swep) or not swep.npcDrops then
+			return 
+		end
+			swep.hasTaken = true 
+	end)
 
 
 --[[--[[-------------------------------------------------------------------------
@@ -1181,6 +1177,7 @@ end
 		luaEntry:SetText(code or "ENT:Remove() -- lol its a joke :D")
 		luaEntry:SetTextColor(color_white)
 		luaEntry.Paint = function(panel,w,h)
+		luaEntry:SetVerticalScrollbarEnabled( true )
 		draw.RoundedBox(0,0,0,w,h,Color(46, 46, 46, 255))
 		panel:DrawTextEntryText( rgb(32, 194, 14), rgb(255, 242, 0), rgb(255, 242, 0) )
 		end
@@ -1280,7 +1277,7 @@ ENT:Remove()
  -- you can change it
 timer.Simple(10, function()
  -- remove old one
-if IsValid(ENT) then
+if IsValid(ENT) and not ENT.hasTaken then
 ENT:Remove() 
 end
 end)
