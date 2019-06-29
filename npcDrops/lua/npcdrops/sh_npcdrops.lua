@@ -181,12 +181,10 @@ local rgb = Color
 			end
 			
 		end
-		print("argeris")
 		PrintTable(arger)
 		table.Merge(tab[key],arger)
 
 		end
-		print("tabkey")
 		PrintTable(tab[key])
 		local query = "UPDATE npcdrops_data SET data = '"..util.TableToJSON(tab).."' WHERE npc_id = '"..npc.."'"
 		sql.Query(query)
@@ -265,7 +263,7 @@ local rgb = Color
 	end
 
 	net.Receive("npcDrops_new", function(len,pl)
-
+		if not pl:IsAdmin() then return end
 		local npcid = net.ReadString()
 		local entid = net.ReadString()
 		local rate  = net.ReadFloat()
@@ -276,8 +274,7 @@ local rgb = Color
 	end)
 
 	net.Receive("npcDrops_delux", function(len,pl)
-
-
+		if not pl:IsAdmin() then return end
 		local npcid = net.ReadString()
 		local entid = net.ReadString()
 		local rateid  = net.ReadFloat()
@@ -295,7 +292,7 @@ local rgb = Color
 	end) -- update 1.5 delux!
 
 	net.Receive("npcDrops_edit", function(len,pl)
-
+		if not pl:IsAdmin() then return end
 		local npcide = net.ReadString()
 		local entide = net.ReadString()
 		local rated  = net.ReadFloat()
@@ -312,7 +309,7 @@ local rgb = Color
 
 	net.Receive("npcDrops_delete", function(len,pl)
 
-
+		if not pl:IsAdmin() then return end
 		local npcid = net.ReadString()
 		
 
@@ -326,7 +323,7 @@ local rgb = Color
 
 	net.Receive("npcDrops_reset", function(len,pl)
 
-
+		if not pl:IsAdmin() then return end
 		deleteNPCDrops(1)
 
 
@@ -334,7 +331,7 @@ local rgb = Color
 
 	net.Receive("npcDrops_refresh", function(len,pl)
 			if not IsValid(pl) then return end
-
+			if not pl:IsAdmin() then return end
 			local table = sql.Query( "SELECT * FROM npcdrops_data")
 			if not (IsValid(table) || istable(table)) then npcDrops.notify("Error occured with database. Please reset npcDrops.") return end
 
@@ -370,7 +367,7 @@ local rgb = Color
 
 		local npc = net.ReadString()
 		local id  = net.ReadString()
-
+		if not pl:IsAdmin() then return end
 		local tab = sql.Query( "SELECT * FROM npcdrops_data WHERE npc_id = '"..npc.."'")
 		local drops = util.JSONToTable(tab[1].data)
 		--print("---------------LOK AT Menu	")
