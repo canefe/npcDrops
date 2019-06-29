@@ -1,6 +1,6 @@
 -- npcDrops base file - npcDrops by cmetopapa
 AddCSLuaFile()
-local version = "1.6.4" 
+local version = "1.6.5" 
 
 npcDrops = npcDrops or {} -- in-lua data 
 
@@ -612,6 +612,7 @@ end
 			return 
 		end
 			swep.hasTaken = true 
+			swep:SetNWBool("npcDrops_hasTaken", true)
 	end)
 
 
@@ -645,6 +646,7 @@ if CLIENT then
 			 if v:GetNWBool("isnpcDrop", false) then
 
 			 		if GetConVar("npcdrops_labels"):GetBool() then
+						if v:GetNWBool("npcDrops_hasTaken", false) then return end
 					 	local backgroundColor = rgb(44, 62, 80, 230)
 					 	local textV = 1
 
