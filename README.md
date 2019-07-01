@@ -31,20 +31,7 @@ Add npcDrops folder into `/garrysmod/addons_ folder` Then restart your server.
 ### Media
 
 Main GUI
-
-![Main GUI](https://github.com/canefe/npcDrops/blob/master/media/gui/main/v1.4.png)
-
-Creating new npcDrop
-
-![New npcDrop](https://github.com/canefe/npcDrops/blob/master/media/gui/new-v1.4.png?raw=true)
-
-Settings
-
-![Settings](https://github.com/canefe/npcDrops/blob/master/media/gui/v1.4.png?raw=true)
-
-List of npcDrops (to remove or edit any)
-
-![List](https://github.com/canefe/npcDrops/blob/master/media/gui/delete/v1.4.png?raw=true)
+*Will be updated...*
 
 
 ### Credits
