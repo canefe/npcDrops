@@ -20,10 +20,10 @@ npcDrops a simple loot system that drops from NPCs.
 #### 1: Adding to steam collection.
 You can add addon to your steam collection. [Click here](https://steamcommunity.com/sharedfiles/filedetails/?id=1161497192) and add to your collection.
 
-**Note: Workshop version may is not as updated as github version.**
+**Note: Workshop version might not as updated as github version.**
 
 #### 2: Adding to addons folder
-Add npcDrops folder into `/garrysmod/addons_ folder` Then restart your server.
+Add npcDrops folder into `/garrysmod/addons/ folder` Then restart your server.
 
 ### How to Use
 [Click here](https://github.com/canefe/npcDrops/wiki) to visit the wiki.
