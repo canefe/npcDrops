@@ -173,19 +173,16 @@ local rgb = Color
 		local arger = {}
 		if ... then
 		for k,v in pairs({...}) do
-			print(k.."---".."undabe")
-			--print(v.."+++")
-			PrintTable(v)
 			for c,a in pairs(v) do
 				arger[c] = a
 			end
 			
 		end
-		PrintTable(arger)
+		--PrintTable(arger)
 		table.Merge(tab[key],arger)
 
 		end
-		PrintTable(tab[key])
+		--PrintTable(tab[key])
 		local query = "UPDATE npcdrops_data SET data = '"..util.TableToJSON(tab).."' WHERE npc_id = '"..npc.."'"
 		sql.Query(query)
 
@@ -447,7 +444,7 @@ end
 		if GetConVar("npcdrops_disabled"):GetBool() then return end
 		local shouldNotify = GetConVar("npcdrops_notify"):GetBool()
 		local chance
-		PrintTable(dropsTable)
+		--PrintTable(dropsTable)
 		local med	
 		for k,v in pairs(dropsTable) do if v.npc_id == npc:GetClass() then med = util.JSONToTable(v.data) else return end end
 
@@ -457,7 +454,7 @@ end
 			if GetConVar("npcdrops_debug"):GetBool() then passes[v.ent] = v end
 			local hector
 			--if #med == 1 then hector = med else hector = med[k] end
-			if rate <= tonumber(v.rate) or v.rate == 1 then print("got you") passes[v.ent] = v end
+			if rate <= tonumber(v.rate) or v.rate == 1 then passes[v.ent] = v end
 
 			
 		end
@@ -468,7 +465,7 @@ end
 				if GetConVar("npcdrops_lootsound"):GetBool() then killer:EmitSound("npcdrops_lootsound") end
 				if tobool(v.ship) then
 					npcDropsShipment(killer, v.ent, npc:GetPos())
-					print("[npcDrops] NPC_id: "..v.npc_id.." dropped shipment. Chance Rate: "..v.chance.." was rate:")
+					--print("[npcDrops] NPC_id: "..v.npc_id.." dropped shipment. Chance Rate: "..v.chance.." was rate:")
 					if shouldNotify and (math.floor(v.chance) != 1) then killer:SendLua("local tab={Color(26, 188, 156),[[<npcDrops>: ]],Color(236, 240, 241),[[Congratulations! You have dropped '"..npcDrops.getvName(v.ent).."' with rate "..v.chance.."!]]}chat.AddText(unpack(tab))") end
 				else
 
@@ -481,7 +478,7 @@ end
 
 
 
-						PrintTable(passes)
+						--PrintTable(passes)
 						if not string.StartWith( v.ent , "f:") then -- check if its food or not
 							local item = ents.Create(v.ent)
 
@@ -526,7 +523,7 @@ end
 							item:Spawn()
 
 
-							print("[npcDrops] NPC_id: "..npc:GetClass().." dropped item. Chance Rate: "..v.rate)
+							--print("[npcDrops] NPC_id: "..npc:GetClass().." dropped item. Chance Rate: "..v.rate)
 							if shouldNotify and (tonumber(v.rate) <= 0.8) then killer:SendLua("local tab={Color(26, 188, 156),[[<npcDrops>: ]],Color(236, 240, 241),[[Congratulations! You have dropped '"..npcDrops.getvName(v.ent).."' with rate "..Anakinn(v.rate).."!]]}chat.AddText(unpack(tab))") end
 							if GetConVar("npcdrops_itemremove"):GetBool() then
 								timer.Simple(GetConVar("npcdrops_itemremovedly"):GetInt(), function()
@@ -1133,7 +1130,6 @@ end
 
 		local remlabel = labelrem
 		local boolLabel = vgui.Create( "DCheckBox", panel1 ) 
-			print("label rem is da", labelrem)
 			boolLabel:SetPos( 20, 120 )
 			boolLabel:SetValue(labelrem)
 			boolLabel:SetTooltip("Remove label for this item")
@@ -1379,10 +1375,9 @@ end)
 			local anyerror = 0
 			if entityidraw then else  anyerror = anyerror + 1 end 
 			if not (anyerror == 0) then return end
-			print("[npcDrops] Editing: ", npcidraw, " with values: ", entityidraw, NumberWangValue, boolis, codeisok, labelisok)
+			--print("[npcDrops] Editing: ", npcidraw, " with values: ", entityidraw, NumberWangValue, boolis, codeisok, labelisok)
 			codeisok = codeisok and luaEntry:GetValue() or false
 			labelisok = labelisok and customEntry:GetValue() or false
-			print(labelisok,"labelisok")
 			net.Start("npcDrops_edit")
 				net.WriteString(npcidraw)
 				net.WriteString(entityidraw)
@@ -2153,7 +2148,7 @@ surface.SetDrawColor( rgb(52, 73, 94, 50) )
 	function npcDropsGUI()
 
 		local tbl = net.ReadTable()
-		PrintTable(tbl)
+		--PrintTable(tbl)
 
 		local isEnabled = not GetConVar("npcdrops_disabled"):GetBool()
 
